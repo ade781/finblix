@@ -28,7 +28,12 @@ import {
   AlertCircle,
   ShieldCheck,
   ChevronRight,
-  Database
+  Database,
+  Copy,
+  Download,
+  Check,
+  GitMerge,
+  ShieldAlert
 } from 'lucide-react';
 
 const PRESET_ASSETS = [
@@ -58,28 +63,50 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
   const [scraping, setScraping] = useState(false);
   const [scrapeResult, setScrapeResult] = useState(null);
 
-  // Fetch 3-Hour prediction
-  const fetchPrediction = async (sym) => {
-    setLoading(true);
+  // Live Timer & Auto-Refresh state
+  const [timeUntilNextBar, setTimeUntilNextBar] = useState(300);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  // Fetch 3-Hour prediction with optional background refresh
+  const fetchPrediction = async (sym, isBackground = false) => {
+    if (!isBackground) setLoading(true);
     setError(null);
     try {
       const res = await getThreeHourPrediction(sym);
       if (res.data?.status === 'success') {
         setPredictionData(res.data.data);
-      } else {
+      } else if (!isBackground) {
         setError(res.data?.message || 'Gagal memuat proyeksi 3 jam');
       }
     } catch (err) {
       console.error('Fetch 3H prediction error:', err);
-      setError('Terjadi kendala saat memuat data prediksi 3 jam.');
+      if (!isBackground) setError('Terjadi kendala saat memuat data prediksi 3 jam.');
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchPrediction(selectedSymbol);
   }, [selectedSymbol]);
+
+  // Live Countdown Timer to next 5-minute bar boundary (300 seconds)
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = 300 - (now % 300);
+      setTimeUntilNextBar(remaining);
+      if (remaining === 300 && autoRefresh) {
+        // Trigger background silent refresh at bar close
+        fetchPrediction(selectedSymbol, true);
+      }
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [selectedSymbol, autoRefresh]);
 
   // Handle re-training 7D model
   const handleTrainModel = async () => {
@@ -120,6 +147,52 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
     }
   };
 
+  // Copy structured trading desk summary to clipboard
+  const handleCopySignal = () => {
+    if (!predictionData) return;
+    const session = predictionData.market_session;
+    const conf = predictionData.multi_timeframe_confluence;
+    const tp = predictionData.target_price;
+    const ns = predictionData.daily_news_sentiment;
+    const ms = predictionData.micro_signals;
+
+    const text = `[FINBLIX QUANTITATIVE DESK - SINYAL 3 JAM]
+Aset: ${selectedSymbol} | Status: ${session?.badge || 'AKTIF'}
+Waktu Analisis: ${predictionData.generated_at}
+Horizon Target: ${session?.target_time_wib || predictionData.target_time} (${session?.horizon_label || '3 Jam'})
+--------------------------------------------------
+Keputusan Intraday: PROYEKSI ${pred?.direction} (Probabilitas: ${pred?.probability_percent}%)
+Tingkat Keyakinan: ${pred?.conviction_tier}
+Keselarasan Tren: ${conf?.badge || 'INTRADAY'} (Harian: ${conf?.daily_direction || '-'} | 3 Jam: ${conf?.three_hour_direction || '-'})
+Catatan Strategi: ${conf?.advisory || '-'}
+--------------------------------------------------
+Harga Saat Ini: ${tp?.current_price?.toLocaleString('en-US')}
+Target Proyeksi 3 Jam: ${tp?.projected_target_price?.toLocaleString('en-US')} (${(tp?.expected_return_percent || 0) >= 0 ? '+' : ''}${tp?.expected_return_percent}%)
+Batas Atas Volatilitas: ${tp?.volatility_upper_band?.toLocaleString('en-US')}
+Batas Bawah Volatilitas: ${tp?.volatility_lower_band?.toLocaleString('en-US')}
+--------------------------------------------------
+Sentimen Berita: ${ns?.label} (${ns?.sentiment_score}) [${ns?.source_description || 'Terkait'}]
+Mikro-Sinyal: RSI(1H) ${ms?.rsi_1h || '-'} | CMF ${ms?.chaikin_money_flow_12h || '-'} | Vol Surge ${ms?.volume_surge_ratio || '-'}x
+--------------------------------------------------
+Finblix AI Intraday Radar Engine`;
+
+    navigator.clipboard.writeText(text);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 3500);
+  };
+
+  // Download raw JSON payload
+  const handleDownloadJSON = () => {
+    if (!predictionData) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(predictionData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `finblix_signal_3h_${selectedSymbol.replace(/[/.]/g, '_')}_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   const filteredAssets = PRESET_ASSETS.filter(a => {
     if (activeCategory === 'crypto') return a.type === 'crypto';
     if (activeCategory === 'idx') return a.type === 'idx';
@@ -134,9 +207,14 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
   const newsSentiment = predictionData?.daily_news_sentiment || predictionData?.scraped_news_summary;
   const marketSession = predictionData?.market_session;
   const trajectoryData = predictionData?.trajectory_5m;
+  const confluence = predictionData?.multi_timeframe_confluence;
+  const anomaly = predictionData?.intraday_anomaly;
 
   const isUp = pred?.direction === 'NAIK';
   const isDown = pred?.direction === 'TURUN';
+
+  const countdownMinutes = Math.floor(timeUntilNextBar / 60);
+  const countdownSeconds = (timeUntilNextBar % 60).toString().padStart(2, '0');
 
   return (
     <div className="space-y-6">
@@ -145,7 +223,7 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="p-2 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400">
                 <ThreeHourRadarIcon className="w-6 h-6 text-cyan-400" />
               </span>
@@ -155,6 +233,15 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 TRAINING WINDOW: 7 HARI TERAKHIR
               </span>
+              {marketSession?.badge && (
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase border ${
+                  marketSession.status === 'MARKET_CLOSED'
+                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                    : 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30'
+                }`}>
+                  {marketSession.badge}
+                </span>
+              )}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-mono">
               PREDIKSI 3 JAM KE DEPAN
@@ -164,33 +251,67 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
             </p>
           </div>
 
-          {/* Action Buttons: Scraping & Training */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
-            <button
-              onClick={handleBulkScrape}
-              disabled={scraping}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold border transition-all ${
-                scraping 
-                  ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed' 
-                  : 'bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border-cyan-500/40 hover:border-cyan-400 shadow-lg shadow-cyan-950/50'
-              }`}
-            >
-              <RefreshCw className={`w-4 h-4 ${scraping ? 'animate-spin text-cyan-400' : ''}`} />
-              <span>{scraping ? 'Scraping Massal...' : 'Scrape Berita Harian'}</span>
-            </button>
+          {/* Action Toolbar */}
+          <div className="flex flex-col sm:items-end gap-2.5 shrink-0">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+              <button
+                onClick={handleBulkScrape}
+                disabled={scraping}
+                className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold border transition-all ${
+                  scraping 
+                    ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed' 
+                    : 'bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-300 border-cyan-500/40 hover:border-cyan-400 shadow-lg shadow-cyan-950/50'
+                }`}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${scraping ? 'animate-spin text-cyan-400' : ''}`} />
+                <span>{scraping ? 'Scraping...' : 'Scrape Berita'}</span>
+              </button>
 
-            <button
-              onClick={handleTrainModel}
-              disabled={training}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-mono font-bold border transition-all ${
-                training 
-                  ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed' 
-                  : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-400/40 shadow-lg shadow-blue-600/30'
-              }`}
-            >
-              <Zap className={`w-4 h-4 ${training ? 'animate-bounce text-amber-300' : ''}`} />
-              <span>{training ? 'Melatih 7 Hari...' : 'Latih Ulang Model 7D'}</span>
-            </button>
+              <button
+                onClick={handleTrainModel}
+                disabled={training}
+                className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-mono font-bold border transition-all ${
+                  training 
+                    ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-400/40 shadow-lg shadow-blue-600/30'
+                }`}
+              >
+                <Zap className={`w-3.5 h-3.5 ${training ? 'animate-bounce text-amber-300' : ''}`} />
+                <span>{training ? 'Melatih...' : 'Latih Ulang 7D'}</span>
+              </button>
+
+              <button
+                onClick={handleCopySignal}
+                className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono font-bold transition-all shadow-md"
+                title="Salin ringkasan lembar rekomendasi sinyal ke clipboard"
+              >
+                {copySuccess ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-cyan-400" />}
+                <span>{copySuccess ? 'Tersalin!' : 'Salin Sinyal'}</span>
+              </button>
+
+              <button
+                onClick={handleDownloadJSON}
+                className="flex items-center space-x-1 px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-mono transition-all"
+                title="Unduh seluruh data sinyal JSON"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Live Countdown & Auto-Refresh Bar */}
+            <div className="flex items-center space-x-2 text-[11px] font-mono bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+              <span className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-cyan-400 animate-pulse' : 'bg-slate-600'}`} />
+              <span className="text-slate-400">Pembaruan Bar 5M:</span>
+              <span className="font-bold text-white">{countdownMinutes}:{countdownSeconds}</span>
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
+                  autoRefresh ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                {autoRefresh ? 'AUTO: ON' : 'AUTO: OFF'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -214,6 +335,13 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
               </span>
             </span>
             <button onClick={() => setScrapeResult(null)} className="text-slate-400 hover:text-white text-xs">Tutup</button>
+          </div>
+        )}
+
+        {copySuccess && (
+          <div className="mt-4 p-2.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-mono text-xs flex items-center space-x-2 shadow-xl">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>Format lembar rekomendasi trading desk 3-jam berhasil disalin ke clipboard!</span>
           </div>
         )}
       </div>
@@ -319,6 +447,27 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
         </div>
       ) : (
         <div className="space-y-6">
+
+          {/* Intraday Volatility Anomaly Notification Banner (if any) */}
+          {anomaly?.is_anomaly && (
+            <div className={`p-4 rounded-2xl border flex items-start space-x-3 shadow-xl ${
+              anomaly.severity === 'critical'
+                ? 'bg-rose-950/40 border-rose-500/50 text-rose-300'
+                : 'bg-amber-950/40 border-amber-500/50 text-amber-300'
+            }`}>
+              <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5 text-amber-400 animate-pulse" />
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2 font-mono font-bold text-xs">
+                  <span className="px-2 py-0.5 rounded bg-slate-950 text-amber-400 border border-amber-500/30">
+                    PERINGATAN ANOMALI VOLATILITAS INTRADAY
+                  </span>
+                  <span>{anomaly.anomaly_type}</span>
+                </div>
+                <p className="text-xs font-sans leading-relaxed">{anomaly.anomaly_message}</p>
+              </div>
+            </div>
+          )}
+
           {/* Primary Bento Row: Hero Direction & Target Price Range */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
@@ -472,6 +621,75 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
             targetPrice={targetPrice?.projected_target_price}
             marketSession={marketSession}
           />
+
+          {/* Multi-Timeframe Confluence & Strategic Alignment Card */}
+          <div className="bg-gradient-to-r from-slate-900 via-[#0d1629] to-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <span className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                  <GitMerge className="w-4 h-4" />
+                </span>
+                <div>
+                  <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                    Keselarasan Tren Multi-Timeframe (Harian vs 3-Jam)
+                  </span>
+                  <div className="text-[10px] text-slate-400 font-sans">
+                    Membandingkan arah makro akhir hari (EOD Daily) dengan momentum mikro intraday 3-jam.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className={`px-3 py-1 rounded-xl text-xs font-mono font-bold border ${
+                  confluence?.status?.includes('HIGH_CONFLUENCE_BULLISH') ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                  confluence?.status?.includes('HIGH_CONFLUENCE_BEARISH') ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                  confluence?.status?.includes('PULLBACK') ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                  'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                }`}>
+                  {confluence?.badge || 'ANALISIS INTRADAY'}
+                </span>
+                <span className="text-xs font-mono font-bold text-slate-300 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-800">
+                  Skor: {confluence?.confluence_score || 50}%
+                </span>
+              </div>
+            </div>
+
+            {/* Confluence Alignment Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+                <span className="text-slate-400">Tren Makro Harian:</span>
+                <span className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                  confluence?.daily_direction === 'NAIK' ? 'bg-emerald-500/20 text-emerald-400' :
+                  confluence?.daily_direction === 'TURUN' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {confluence?.daily_direction || 'MEMPROSES'}
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+                <span className="text-slate-400">Proyeksi Mikro 3-Jam:</span>
+                <span className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                  confluence?.three_hour_direction === 'NAIK' ? 'bg-emerald-500/20 text-emerald-400' :
+                  confluence?.three_hour_direction === 'TURUN' ? 'bg-rose-500/20 text-rose-400' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {confluence?.three_hour_direction || 'MEMPROSES'}
+                </span>
+              </div>
+
+              <div className="p-3 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+                <span className="text-slate-400">Status Eksekusi:</span>
+                <span className="font-bold text-cyan-300 truncate max-w-[150px]">
+                  {confluence?.status?.replace(/_/g, ' ') || 'TERPANTAU'}
+                </span>
+              </div>
+            </div>
+
+            {/* Strategic Advisory Text */}
+            <div className="p-3 bg-slate-950/50 rounded-xl border border-slate-800 text-xs font-sans text-slate-300 flex items-start space-x-2">
+              <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+              <span><strong>Rekomendasi Strategis:</strong> {confluence?.advisory}</span>
+            </div>
+          </div>
 
           {/* Secondary Bento Row: Micro-Momentum Indicators & Daily Bulk News Sentiment */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -673,7 +891,7 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
                       ))
                     ) : (
                       <div className="p-4 text-xs font-mono text-slate-500 text-center bg-slate-950/30 rounded-xl">
-                        Belum ada berita spesifik untuk aset ini di feed hari ini. Silakan klik tombol "Scrape Berita Harian".
+                        Belum ada berita spesifik untuk aset ini di feed hari ini. Silakan klik tombol "Scrape Berita".
                       </div>
                     )}
                   </div>

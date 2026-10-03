@@ -652,6 +652,98 @@ class ThreeHourPredictionEngine:
             session_info=session_info
         )
 
+        # 6. Evaluasi Keselarasan Multi-Timeframe (Harian vs 3-Jam)
+        confluence_info = {
+            "daily_direction": "UNKNOWN",
+            "three_hour_direction": direction,
+            "status": "NEUTRAL",
+            "confluence_score": 50,
+            "badge": "ANALISIS INTRADAY",
+            "advisory": "Sinyal berjalan mandiri pada horizon mikro 3 jam."
+        }
+
+        try:
+            from app.services.prediction_engine import DailyPredictionEngine
+            daily_res = await DailyPredictionEngine.predict_daily_direction(db, symbol)
+            if daily_res:
+                daily_dir = (
+                    daily_res.get("prediction", {}).get("direction") 
+                    or daily_res.get("direction") 
+                    or "UNKNOWN"
+                )
+                confluence_info["daily_direction"] = daily_dir
+
+                if daily_dir == "NAIK" and direction == "NAIK":
+                    confluence_info["status"] = "HIGH_CONFLUENCE_BULLISH"
+                    confluence_info["confluence_score"] = 95
+                    confluence_info["badge"] = "KONFLUENSI KUAT (STRONG LONG)"
+                    confluence_info["advisory"] = "Sinyal searah: Tren makro harian dan mikro 3 jam selaras NAIK. Peluang keberhasilan trading paling optimal."
+                elif daily_dir == "TURUN" and direction == "TURUN":
+                    confluence_info["status"] = "HIGH_CONFLUENCE_BEARISH"
+                    confluence_info["confluence_score"] = 95
+                    confluence_info["badge"] = "KONFLUENSI KUAT (STRONG SHORT)"
+                    confluence_info["advisory"] = "Sinyal searah: Tren makro harian dan mikro 3 jam selaras TURUN. Waspadai risiko akumulasi posisi beli."
+                elif daily_dir == "NAIK" and direction == "TURUN":
+                    confluence_info["status"] = "COUNTER_TREND_PULLBACK"
+                    confluence_info["confluence_score"] = 65
+                    confluence_info["badge"] = "PERINGATAN PULLBACK MIKRO"
+                    confluence_info["advisory"] = "Divergensi tren: Tren harian NAIK namun mikro 3 jam mengalami koreksi sehat (pullback). Waspadai peluang buy-on-weakness."
+                elif daily_dir == "TURUN" and direction == "NAIK":
+                    confluence_info["status"] = "BEAR_MARKET_BOUNCE"
+                    confluence_info["confluence_score"] = 60
+                    confluence_info["badge"] = "PANTULAN TEKNIKAL SESAAT"
+                    confluence_info["advisory"] = "Divergensi tren: Tren harian TURUN namun mikro 3 jam mengalami technical rebound. Disarankan scalping cepat dan batasi risiko."
+        except Exception as e:
+            print(f"[3HEngine] Daily confluence check warning: {e}")
+
+        # 7. Deteksi Anomali Volatilitas & Pencatatan Alert
+        is_anomaly = False
+        anomaly_type = "NORMAL"
+        anomaly_msg = "Pergerakan harga dan volume intraday berada dalam koridor normal."
+        anomaly_severity = "info"
+
+        vol_surge = float(latest_row.get("volume_surge", 1.0))
+        if current_price > upper_target:
+            is_anomaly = True
+            anomaly_type = "UPPER_BAND_BREACH"
+            anomaly_msg = f"Penembusan Koridor Atas: {symbol} melonjak ke {current_price:,.2f}, melampaui batas volatilitas atas ({upper_target:,.2f})."
+            anomaly_severity = "warning"
+        elif current_price < lower_target:
+            is_anomaly = True
+            anomaly_type = "LOWER_BAND_BREACH"
+            anomaly_msg = f"Penembusan Koridor Bawah: {symbol} tertekan ke {current_price:,.2f}, di bawah batas volatilitas ({lower_target:,.2f})."
+            anomaly_severity = "critical"
+        elif vol_surge >= 2.0:
+            is_anomaly = True
+            anomaly_type = "EXTREME_VOLUME_SPIKE"
+            anomaly_msg = f"Lonjakan Volume Ekstrem: {symbol} mencatatkan lonjakan volume 1-jam {vol_surge:.1f}x dari rata-rata normal."
+            anomaly_severity = "warning"
+
+        if is_anomaly:
+            try:
+                from app.models.news import AlertLog
+                threshold_time = datetime.now(timezone.utc) - timedelta(minutes=45)
+                recent_alert = db.query(AlertLog).filter(
+                    AlertLog.asset_id == asset.id,
+                    AlertLog.alert_type == anomaly_type.lower(),
+                    AlertLog.is_read == False,
+                    AlertLog.triggered_at >= threshold_time
+                ).first()
+
+                if not recent_alert:
+                    new_alert = AlertLog(
+                        asset_id=asset.id,
+                        alert_type=anomaly_type.lower(),
+                        message=anomaly_msg,
+                        severity=anomaly_severity,
+                        is_read=False
+                    )
+                    db.add(new_alert)
+                    db.commit()
+            except Exception as e:
+                db.rollback()
+                print(f"[3HEngine] Anomaly alert write warning: {e}")
+
         pred_dict = {
             "direction": direction,
             "label": "BULLISH (UP 3-HOURS)" if direction == "NAIK" else "BEARISH (DOWN 3-HOURS)",
@@ -710,6 +802,13 @@ class ThreeHourPredictionEngine:
                 "future_points": trajectory_5m_points
             },
             "micro_signals": micro_signals,
+            "multi_timeframe_confluence": confluence_info,
+            "intraday_anomaly": {
+                "is_anomaly": is_anomaly,
+                "anomaly_type": anomaly_type,
+                "anomaly_message": anomaly_msg,
+                "severity": anomaly_severity
+            },
             "backtest_7d_accuracy": {
                 "evaluated_bars": total_eval,
                 "correct_predictions": correct_count,
