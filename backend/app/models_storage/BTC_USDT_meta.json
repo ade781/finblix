@@ -1,10 +1,10 @@
 {
   "symbol": "BTC/USDT",
-  "trained_at": "2026-10-03 15:46:02 UTC",
+  "trained_at": "2026-10-03 17:14:49 UTC",
   "dataset_bars": 1000,
   "samples_trained": 775,
   "samples_tested": 194,
-  "training_duration_seconds": 10.81,
+  "training_duration_seconds": 10.29,
   "metrics": {
     "train_accuracy_pct": 98.32,
     "cv_5fold_mean_pct": 49.92,

@@ -16,6 +16,7 @@ from app.services.stock_service import StockService
 from app.services.scraper_service import ScraperService
 from app.services.sentiment_engine import SentimentEngine
 from app.services.ml_training_engine import MLTrainingEngine
+from app.services.bertopic_service import FinancialBERTopicEngine
 import joblib
 
 class DailyPredictionEngine:
@@ -178,14 +179,22 @@ class DailyPredictionEngine:
             "mtf_confluence": mtf_confluence
         }
 
-    @staticmethod
-    def _quant_predict_equity(slice_bars: List[Dict[str, Any]], fng_val: float, news_sentiment: float, ml_prob_up: Optional[float] = None) -> Dict[str, Any]:
+    @classmethod
+    def _quant_predict_equity(
+        cls, 
+        slice_bars: List[Dict[str, Any]], 
+        fng_val: float, 
+        news_sentiment: float, 
+        ml_prob_up: Optional[float] = None,
+        bertopic_res: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Model Kuantitatif Khusus Saham (BBCA, BBRI, IHSG, US Equities):
-        Memanfaatkan institutional momentum persistence & foreign accumulation:
+        Didukung oleh Pemodelan Topik Finansial BERTopic & Institutional Flow:
+        - Klasifikasi Topik Fundamental (Kinerja Laba/Dividen, BI Rate/Moneter, Target Konsensus Analis)
         - Fast EMA Alignment (9 vs 21) & EMA 9 Slope Trajectory
-        - Akselerasi Histogram MACD (Leading momentum)
-        - ADX & Trend Strength Confirmation
+        - Akselerasi Histogram MACD (Leading institutional momentum)
+        - Dip/Rally Reversal Dynamics dalam Tren Makro Mingguan (Buy-on-Dip)
         - Konfirmasi Lonjakan Volume Transaksi Institusi
         - Probabilitas Machine Learning Ensemble
         """
@@ -299,16 +308,28 @@ class DailyPredictionEngine:
             tech_reasons.append(f"Pelemahan harga disertai volume distribusi ({vol_ratio:.1f}x dari rata-rata).")
 
         tech_score = max(-100.0, min(100.0, score))
-        fund_score = max(-100.0, min(100.0, (news_sentiment * 40.0) + (fng_val - 50.0) * 1.0))
+
+        # 7. BERTopic Fundamental Topic Modeling Analysis (Khusus Saham)
         fund_reasons = []
-        if abs(news_sentiment) > 0.15:
-            tonality = "optimis" if news_sentiment > 0 else "waspada"
-            fund_reasons.append(f"Sentimen media saham {tonality} ({news_sentiment:+.2f}).")
-        fund_reasons.append(f"Kondisi makro pasar saham terukur (FGI {fng_val:.0f}).")
+        if bertopic_res and bertopic_res.get("has_topics"):
+            dom_topic = bertopic_res.get("dominant_topic", "Dinamika Pasar Saham")
+            t_impact = bertopic_res.get("topic_impact_points", 0.0)
+            kws = bertopic_res.get("top_keywords", [])
+            fund_score = max(-100.0, min(100.0, (t_impact * 1.6) + (news_sentiment * 30.0)))
+            fund_reasons.append(f"BERTopic Klaster Dominan: '{dom_topic}' (Dampak Sektor: {t_impact:+.1f} poin).")
+            if kws:
+                fund_reasons.append(f"Kata Kunci Representasi c-TF-IDF: {', '.join(kws[:4])}.")
+        else:
+            fund_score = max(-100.0, min(100.0, news_sentiment * 50.0))
+            if abs(news_sentiment) > 0.15:
+                tonality = "optimis" if news_sentiment > 0 else "waspada"
+                fund_reasons.append(f"Sentimen media saham {tonality} ({news_sentiment:+.2f}).")
+            else:
+                fund_reasons.append("Sentimen berita korporasi berada pada rentang konsolidasi stabil.")
 
         if ml_prob_up is not None:
             ml_score = (ml_prob_up - 0.50) * 200.0
-            composite = (tech_score * 0.45) + (fund_score * 0.20) + (ml_score * 0.35)
+            composite = (tech_score * 0.45) + (fund_score * 0.25) + (ml_score * 0.30)
         else:
             composite = (tech_score * 0.65) + (fund_score * 0.35)
 
@@ -326,7 +347,8 @@ class DailyPredictionEngine:
             "fund_reasons": fund_reasons,
             "rsi": round(rsi, 1),
             "weekly_trend": weekly_trend,
-            "mtf_confluence": mtf_confluence
+            "mtf_confluence": mtf_confluence,
+            "bertopic_analysis": bertopic_res
         }
 
     @classmethod
@@ -418,9 +440,13 @@ class DailyPredictionEngine:
         # 5. Eksekusi Prediksi Berdasarkan Tipe Aset (Micro-Structure Routing)
         is_crypto = (asset.asset_type == "crypto")
         if is_crypto:
+            bertopic_res = None
             q_res = cls._quant_predict_crypto(bars, fng_value, avg_news_sentiment, ml_prob_up)
+            engine_type = "CRYPTO_MICROSTRUCTURE_ENGINE"
         else:
-            q_res = cls._quant_predict_equity(bars, fng_value, avg_news_sentiment, ml_prob_up)
+            bertopic_res = FinancialBERTopicEngine.analyze_equity_news_topics(relevant_news, symbol)
+            q_res = cls._quant_predict_equity(bars, fng_value, avg_news_sentiment, ml_prob_up, bertopic_res)
+            engine_type = "EQUITY_BERTOPIC_ENGINE"
 
         prediction_direction = q_res["direction"]
         confidence = q_res["confidence"]
@@ -469,9 +495,11 @@ class DailyPredictionEngine:
 
         return {
             "symbol": symbol,
+            "engine_type": engine_type,
             "current_price": price,
             "target_date": (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d"),
             "prediction": {
+                "engine_type": engine_type,
                 "direction": prediction_direction,
                 "label": prediction_label,
                 "confidence_percent": confidence,
@@ -481,6 +509,7 @@ class DailyPredictionEngine:
                 "recommendation": recommendation,
                 "weekly_trend": weekly_trend,
                 "mtf_confluence": mtf_confluence,
+                "bertopic_analysis": bertopic_res,
                 "target_range": {
                     "estimated_high": target_high,
                     "estimated_low": target_low
