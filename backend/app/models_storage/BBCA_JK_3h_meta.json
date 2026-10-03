@@ -1,0 +1,12 @@
+{
+  "symbol": "BBCA.JK",
+  "target_horizon": "3_HOURS",
+  "training_window": "7_DAYS_HOURLY",
+  "samples_trained": 28,
+  "samples_tested": 10,
+  "test_accuracy_pct": 60.0,
+  "cv_accuracy_pct": 80.95,
+  "roc_auc_pct": 58.33,
+  "duration_seconds": 1.21,
+  "trained_at": "2026-10-03 18:45:02 UTC"
+}

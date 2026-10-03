@@ -101,4 +101,21 @@ export const getModelStatus = (symbol) => {
   const encodedSymbol = encodeURIComponent(symbol);
   return api.get(`/prediction/model-status/${encodedSymbol}`);
 };
+
+// --- Prediksi 3 Jam ke Depan (Training 7 Hari + Scraping Massal Harian) ---
+export const getThreeHourPrediction = (symbol) => {
+  const encodedSymbol = encodeURIComponent(symbol);
+  return api.get(`/prediction/three-hours/${encodedSymbol}`);
+};
+
+export const trainThreeHourModel = (symbol) => {
+  const encodedSymbol = encodeURIComponent(symbol);
+  return api.post(`/prediction/train-three-hours/${encodedSymbol}`);
+};
+
+export const triggerBulkScrapeNews = (limitPerFeed = 25) => {
+  return api.post(`/prediction/scrape-daily-news?limit_per_feed=${limitPerFeed}`);
+};
+
 export default api;
+

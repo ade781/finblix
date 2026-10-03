@@ -224,3 +224,43 @@ export function MicrostructureWickIcon({ className = "w-5 h-5", size }) {
     </svg>
   );
 }
+
+/**
+ * Three Hour Intraday Horizon Radar Icon
+ * 3-hour temporal arc dial with forward prediction vector and micro-momentum quadrant sweeps.
+ */
+export function ThreeHourRadarIcon({ className = "w-5 h-5", size }) {
+  const style = size ? { width: size, height: size } : undefined;
+  return (
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={style}
+    >
+      <defs>
+        <linearGradient id="three-hour-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#38BDF8" />
+          <stop offset="100%" stopColor="#6366F1" />
+        </linearGradient>
+      </defs>
+      {/* Outer Chronometer Bezel */}
+      <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.4" strokeDasharray="1.5 1.5" opacity="0.6" />
+      {/* 3-Hour Horizon Swept Sector (from 12 to 3 o'clock / 90 deg arc) */}
+      <path d="M12 12L12 3.5 A8.5 8.5 0 0 1 20.5 12 Z" fill="url(#three-hour-grad)" fillOpacity="0.25" stroke="#38BDF8" strokeWidth="1.4" />
+      {/* Central Chrono Axis Node */}
+      <circle cx="12" cy="12" r="2.2" fill="#38BDF8" />
+      <circle cx="12" cy="12" r="0.8" fill="#FFFFFF" />
+      {/* Forward Impulse Arrow towards 3-Hour Target */}
+      <path d="M12 12L18.5 8.5" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="18.5" cy="8.5" r="1.4" fill="#38BDF8" />
+      {/* Intraday Tick Marks */}
+      <line x1="12" y1="2.5" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="21.5" y1="12" x2="19.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="12" y1="21.5" x2="12" y2="19.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="2.5" y1="12" x2="4.5" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+

@@ -3,7 +3,8 @@ import {
   FinblixLogo, 
   IdxEmblemIcon, 
   CryptoOrbitIcon, 
-  GlobalMarketIcon 
+  GlobalMarketIcon,
+  ThreeHourRadarIcon 
 } from '../icons/CustomIcons';
 import { 
   Compass, 
@@ -237,7 +238,19 @@ export default function Navbar({
               }`}
             >
               <Compass className="w-4 h-4" />
-              <span>Dashboard Prediksi</span>
+              <span>Dashboard Harian</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('three-hours')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-mono transition-all ${
+                activeTab === 'three-hours'
+                  ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+              }`}
+            >
+              <ThreeHourRadarIcon className="w-4 h-4 text-cyan-300" />
+              <span>Prediksi 3 Jam</span>
             </button>
 
             <button

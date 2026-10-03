@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from './components/layout/Navbar';
 import DailyPredictionView from './components/prediction/DailyPredictionView';
+import ThreeHourPredictionView from './components/prediction/ThreeHourPredictionView';
 import ScreenerTable from './components/screener/ScreenerTable';
 import NewsView from './components/news/NewsView';
 import AlertsModal from './components/alerts/AlertsModal';
@@ -66,6 +67,14 @@ export default function App() {
             tickers={tickers}
             defaultSymbol={selectedSymbol}
             onSelectSymbol={setSelectedSymbol}
+          />
+        )}
+
+        {/* HALAMAN KHUSUS: PREDIKSI 3 JAM KE DEPAN (TRAINING 7 HARI + SCRAPING HARIAN MASSAL) */}
+        {activeTab === 'three-hours' && (
+          <ThreeHourPredictionView
+            tickers={tickers}
+            defaultSymbol={selectedSymbol}
           />
         )}
 

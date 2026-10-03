@@ -1,52 +1,52 @@
 {
   "symbol": "BTC/USDT",
-  "trained_at": "2026-10-03 18:19:31 UTC",
+  "trained_at": "2026-10-03 18:22:23 UTC",
   "dataset_bars": 1000,
   "samples_trained": 775,
   "samples_tested": 194,
-  "training_duration_seconds": 7.88,
+  "training_duration_seconds": 10.41,
   "metrics": {
-    "train_accuracy_pct": 96.13,
-    "cv_5fold_mean_pct": 51.78,
-    "cv_5fold_std_pct": 2.57,
-    "test_accuracy_pct": 51.55,
-    "precision_pct": 52.58,
+    "train_accuracy_pct": 98.58,
+    "cv_5fold_mean_pct": 52.25,
+    "cv_5fold_std_pct": 2.43,
+    "test_accuracy_pct": 51.03,
+    "precision_pct": 52.04,
     "recall_pct": 51.52,
-    "f1_score_pct": 52.04,
-    "roc_auc_pct": 52.12
+    "f1_score_pct": 51.78,
+    "roc_auc_pct": 53.1
   },
   "top_features": [
     {
       "feature": "upper_wick",
-      "importance": 6.93
+      "importance": 6.8
     },
     {
       "feature": "obv_slope",
-      "importance": 5.77
+      "importance": 5.41
     },
     {
       "feature": "adx_14",
-      "importance": 4.73
+      "importance": 4.77
     },
     {
       "feature": "ret_30d",
-      "importance": 4.65
+      "importance": 4.69
     },
     {
       "feature": "fng_delta",
-      "importance": 4.56
-    },
-    {
-      "feature": "choppiness_index",
-      "importance": 3.97
-    },
-    {
-      "feature": "ret_1d",
-      "importance": 3.94
+      "importance": 4.37
     },
     {
       "feature": "cmf_20",
       "importance": 3.91
+    },
+    {
+      "feature": "choppiness_index",
+      "importance": 3.9
+    },
+    {
+      "feature": "ret_1d",
+      "importance": 3.75
     }
   ],
   "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest + Gradient Boosting + Extra Trees)",

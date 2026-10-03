@@ -1,0 +1,12 @@
+{
+  "symbol": "BTC/USDT",
+  "target_horizon": "3_HOURS",
+  "training_window": "7_DAYS_HOURLY",
+  "samples_trained": 114,
+  "samples_tested": 39,
+  "test_accuracy_pct": 46.15,
+  "cv_accuracy_pct": 50.0,
+  "roc_auc_pct": 47.14,
+  "duration_seconds": 1.39,
+  "trained_at": "2026-10-03 18:52:59 UTC"
+}

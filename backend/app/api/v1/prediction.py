@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.services.prediction_engine import DailyPredictionEngine
 from app.services.ml_training_engine import MLTrainingEngine
+from app.services.three_hour_engine import ThreeHourPredictionEngine
+from app.services.scraper_service import ScraperService
 
 router = APIRouter()
 
@@ -13,13 +15,13 @@ async def get_daily_prediction(
 ):
     """
     Mengembalikan prediksi arah harian (NAIK / TURUN) di akhir hari untuk hari esok
-    berdasarkan perpaduan 60% Analisis Teknikal dan 40% Fundamental Berita & Fear/Greed.
-    Juga menyertakan rekam jejak akurasi historis harian (30 hari terakhir) serta status ML model 1 tahun.
+    berdasarkan perpaduan Analisis Teknikal dan Fundamental Berita & Fear/Greed.
+    Juga menyertakan rekam jejak akurasi historis harian (30 hari terakhir) serta status ML model.
     """
     try:
         result = await DailyPredictionEngine.predict_daily_direction(db, symbol)
         
-        # Cek apakah sudah ada model Machine Learning 1 tahun yang terlatih
+        # Cek apakah sudah ada model Machine Learning yang terlatih
         ml_prediction = await MLTrainingEngine.predict_with_ml_model(db, symbol)
         ml_status = MLTrainingEngine.get_trained_model_status(symbol)
         
@@ -39,6 +41,69 @@ async def get_daily_prediction(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal melakukan prediksi harian: {str(e)}")
 
+@router.get("/three-hours/{symbol:path}")
+async def get_three_hour_prediction(
+    symbol: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Mengembalikan prediksi horizon pendek 3 JAM KE DEPAN berdasarkan:
+    - Pelatihan data 7 hari ke belakang (timeframe 1-jam / 1h)
+    - Scraping berita harian massal aktual dan analisis sentimen
+    - Proyeksi target harga 3 jam dan batas atas-bawah volatilitas intraday
+    - Evaluasi backtest walk-forward 7 hari intraday
+    """
+    try:
+        result = await ThreeHourPredictionEngine.predict_3h_outlook(db, symbol)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result.get("message"))
+        return {
+            "status": "success",
+            "data": result
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal melakukan prediksi 3 jam: {str(e)}")
+
+@router.post("/train-three-hours/{symbol:path}")
+async def train_three_hour_model(
+    symbol: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Melatih model Machine Learning Intraday berbasis data 7 hari ke belakang (1h timeframe)
+    khusus untuk memprediksi arah pergerakan 3 jam ke depan.
+    """
+    try:
+        report = await ThreeHourPredictionEngine.train_7d_model(db, symbol)
+        return {
+            "status": "success",
+            "message": f"Model Intraday 7-Hari untuk prediksi 3 jam ({symbol}) berhasil dilatih!",
+            "data": report
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal melatih model 3 jam: {str(e)}")
+
+@router.post("/scrape-daily-news")
+async def trigger_bulk_daily_news_scraping(
+    limit_per_feed: int = Query(35, description="Jumlah artikel per RSS feed"),
+    db: Session = Depends(get_db)
+):
+    """
+    Memicu scraping massal berita finansial harian dari berbagai feed berita pasar modal & kripto.
+    Mengumpulkan puluhan artikel berita harian aktual untuk memperkaya sentimen prediksi 3 jam dan harian.
+    """
+    try:
+        summary = await ScraperService.scrape_bulk_daily_news(db, limit_per_feed=limit_per_feed)
+        return {
+            "status": "success",
+            "message": "Scraping massal berita finansial harian berhasil diselesaikan!",
+            "data": summary
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Gagal melakukan scraping berita harian: {str(e)}")
+
 @router.post("/train/{symbol:path}")
 async def train_ml_model(
     symbol: str,
@@ -47,9 +112,8 @@ async def train_ml_model(
     db: Session = Depends(get_db)
 ):
     """
-    Melatih model Machine Learning (Ensemble RF 300 + GB 250) menggunakan data historis 1 tahun
-    dan data sentimen berita / Fear & Greed 1 tahun terakhir.
-    Membutuhkan komputasi intensif dan waktu kalkulasi nyata.
+    Melatih model Machine Learning (Ensemble) menggunakan data historis multi-tahun
+    dan data sentimen berita / Fear & Greed terakhir.
     """
     try:
         report = await MLTrainingEngine.train_model_for_asset(
@@ -60,7 +124,7 @@ async def train_ml_model(
         )
         return {
             "status": "success",
-            "message": f"Model AI 1 Tahun untuk {symbol} berhasil dilatih dan disimpan!",
+            "message": f"Model AI untuk {symbol} berhasil dilatih dan disimpan!",
             "data": report
         }
     except Exception as e:
@@ -69,7 +133,7 @@ async def train_ml_model(
 @router.get("/model-status/{symbol:path}")
 async def get_model_status(symbol: str):
     """
-    Mendapatkan status, metrik akurasi, dan feature importance dari model AI 1 tahun yang telah dilatih.
+    Mendapatkan status, metrik akurasi, dan feature importance dari model AI yang telah dilatih.
     """
     status = MLTrainingEngine.get_trained_model_status(symbol)
     if not status:
@@ -78,7 +142,7 @@ async def get_model_status(symbol: str):
             "data": {
                 "symbol": symbol,
                 "is_trained": False,
-                "message": "Model belum dilatih untuk aset ini. Silakan jalankan training 1 tahun."
+                "message": "Model belum dilatih untuk aset ini. Silakan jalankan training."
             }
         }
     return {
