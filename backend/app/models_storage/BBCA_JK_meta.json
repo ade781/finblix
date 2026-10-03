@@ -1,0 +1,54 @@
+{
+  "symbol": "BBCA.JK",
+  "trained_at": "2026-10-03 15:46:11 UTC",
+  "dataset_bars": 718,
+  "samples_trained": 549,
+  "samples_tested": 138,
+  "training_duration_seconds": 8.43,
+  "metrics": {
+    "train_accuracy_pct": 95.63,
+    "cv_5fold_mean_pct": 53.85,
+    "cv_5fold_std_pct": 2.2,
+    "test_accuracy_pct": 60.14,
+    "precision_pct": 53.33,
+    "recall_pct": 54.24,
+    "f1_score_pct": 53.78,
+    "roc_auc_pct": 61.08
+  },
+  "top_features": [
+    {
+      "feature": "ret_1d",
+      "importance": 7.9
+    },
+    {
+      "feature": "price_to_ema50",
+      "importance": 7.59
+    },
+    {
+      "feature": "ema20_to_ema50",
+      "importance": 7.33
+    },
+    {
+      "feature": "macd_hist",
+      "importance": 6.89
+    },
+    {
+      "feature": "atr_norm",
+      "importance": 6.05
+    },
+    {
+      "feature": "price_to_ema20",
+      "importance": 6.02
+    },
+    {
+      "feature": "rsi_delta",
+      "importance": 5.5
+    },
+    {
+      "feature": "bb_width",
+      "importance": 5.18
+    }
+  ],
+  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",
+  "status": "DEPLOYED_ACTIVE"
+}

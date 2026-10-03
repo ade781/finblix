@@ -1,0 +1,54 @@
+{
+  "symbol": "BTC/USDT",
+  "trained_at": "2026-10-03 15:46:02 UTC",
+  "dataset_bars": 1000,
+  "samples_trained": 775,
+  "samples_tested": 194,
+  "training_duration_seconds": 10.81,
+  "metrics": {
+    "train_accuracy_pct": 98.32,
+    "cv_5fold_mean_pct": 49.92,
+    "cv_5fold_std_pct": 2.53,
+    "test_accuracy_pct": 55.15,
+    "precision_pct": 56.25,
+    "recall_pct": 54.55,
+    "f1_score_pct": 55.38,
+    "roc_auc_pct": 56.77
+  },
+  "top_features": [
+    {
+      "feature": "ret_30d",
+      "importance": 7.35
+    },
+    {
+      "feature": "ret_1d",
+      "importance": 6.25
+    },
+    {
+      "feature": "fng_delta",
+      "importance": 6.25
+    },
+    {
+      "feature": "price_to_ema20",
+      "importance": 5.42
+    },
+    {
+      "feature": "rsi_delta",
+      "importance": 5.31
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 5.27
+    },
+    {
+      "feature": "ret_7d",
+      "importance": 5.17
+    },
+    {
+      "feature": "ret_3d",
+      "importance": 5.11
+    }
+  ],
+  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",
+  "status": "DEPLOYED_ACTIVE"
+}
