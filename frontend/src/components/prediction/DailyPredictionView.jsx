@@ -265,6 +265,19 @@ export default function DailyPredictionView({
 
                     {/* Conviction & Multi-Timeframe Badges */}
                     <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                      {/* Engine Differentiation Badge */}
+                      <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold font-mono border flex items-center space-x-1.5 ${
+                        predictionData?.engine_type === 'EQUITY_BERTOPIC_ENGINE'
+                          ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/10'
+                          : 'bg-purple-500/15 text-purple-300 border-purple-500/40 shadow-sm shadow-purple-500/10'
+                      }`}>
+                        <Cpu className="w-3 h-3" />
+                        <span>
+                          {predictionData?.engine_type === 'EQUITY_BERTOPIC_ENGINE' 
+                            ? 'ALGORITMA SAHAM: BERTOPIC CLUSTERING' 
+                            : 'ALGORITMA KRIPTO: MICROSTRUCTURE ENGINE'}
+                        </span>
+                      </span>
                       <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold font-mono border flex items-center space-x-1.5 ${
                         pred?.conviction_tier === 'HIGH' 
                           ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm shadow-emerald-500/10' 
@@ -635,12 +648,24 @@ export default function DailyPredictionView({
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="flex items-center space-x-1.5 text-slate-300 font-semibold">
                       <Newspaper className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Fundamental Sentimen (40%)</span>
+                      <span>
+                        {pred?.bertopic_analysis?.has_topics 
+                          ? 'Fundamental Saham: BERTopic (35%)' 
+                          : 'Fundamental Kripto: Sentimen & On-Chain (35%)'}
+                      </span>
                     </span>
                     <span className="text-emerald-400 font-bold">{pred?.breakdown?.fundamental_score} / 100</span>
                   </div>
                   <div className="text-[11px] text-slate-400">
-                    Skor Berita: <span className="text-white font-mono">{pred?.breakdown?.news_sentiment_score}</span> | Fear & Greed: <span className="text-white font-mono">{pred?.breakdown?.fear_greed_index}</span>
+                    {pred?.bertopic_analysis?.has_topics ? (
+                      <span>
+                        Topik Dominan: <span className="text-cyan-300 font-semibold font-mono">{pred?.bertopic_analysis?.dominant_topic}</span> | Sentimen: <span className="text-white font-mono">{pred?.breakdown?.news_sentiment_score}</span>
+                      </span>
+                    ) : (
+                      <span>
+                        Skor Berita: <span className="text-white font-mono">{pred?.breakdown?.news_sentiment_score}</span> | Fear & Greed: <span className="text-white font-mono">{pred?.breakdown?.fear_greed_index}</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -682,6 +707,57 @@ export default function DailyPredictionView({
                   </ul>
                 </div>
 
+                {/* BERTopic Semantic Clustering Panel for Equities */}
+                {pred?.bertopic_analysis?.has_topics && (
+                  <div className="pt-3 border-t border-slate-800/60 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-mono font-bold text-cyan-400 uppercase flex items-center space-x-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Klaster Narasi Finansial (BERTopic + c-TF-IDF):</span>
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                        {pred.bertopic_analysis.dominant_topic}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-300 leading-relaxed italic bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/70">
+                      "{pred.bertopic_analysis.description}"
+                    </p>
+
+                    {/* c-TF-IDF Keywords Tags */}
+                    {pred.bertopic_analysis.top_keywords && pred.bertopic_analysis.top_keywords.length > 0 && (
+                      <div className="space-y-1.5">
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Kata Kunci c-TF-IDF Terdeteksi:</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {pred.bertopic_analysis.top_keywords.map((kw, kidx) => (
+                            <span key={kidx} className="px-2 py-0.5 text-[10px] font-mono bg-cyan-950/60 text-cyan-300 border border-cyan-800/60 rounded">
+                              #{kw}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Topic Breakdown Bars */}
+                    {pred.bertopic_analysis.topic_breakdown && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="text-[10px] font-mono text-slate-400 uppercase">Sebaran Sensitivitas Topik Emisi:</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                          {pred.bertopic_analysis.topic_breakdown.map((t, tidx) => (
+                            <div key={tidx} className={`p-2 rounded border text-[10px] font-mono flex items-center justify-between ${
+                              t.topic_name === pred.bertopic_analysis.dominant_topic 
+                                ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-200' 
+                                : 'bg-slate-900/50 border-slate-800/70 text-slate-400'
+                            }`}>
+                              <span className="truncate pr-1">{t.topic_name}</span>
+                              <span className="shrink-0 font-bold">{t.count}x</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
             </div>
