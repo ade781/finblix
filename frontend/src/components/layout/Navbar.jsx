@@ -21,10 +21,18 @@ export default function Navbar({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  const filteredTickers = tickers.filter(t => 
-    t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ).slice(0, 8);
+  // Categorize searched tickers
+  const searchResults = searchQuery.trim() 
+    ? tickers.filter(t => 
+        t.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  const idxResults = searchResults.filter(t => t.symbol.endsWith('.JK') || t.symbol === '^JKSE').slice(0, 4);
+  const cryptoResults = searchResults.filter(t => t.symbol.includes('/') || t.asset_type === 'crypto').slice(0, 4);
+  const usResults = searchResults.filter(t => !t.symbol.endsWith('.JK') && !t.symbol.includes('/') && t.symbol !== '^JKSE' && t.asset_type !== 'crypto').slice(0, 3);
+  const totalResultsCount = idxResults.length + cryptoResults.length + usResults.length;
 
   const handleSelectSymbol = (sym) => {
     setSelectedSymbol(sym);
@@ -77,41 +85,126 @@ export default function Navbar({
             />
           </div>
 
-          {/* Search Dropdown */}
+          {/* Segregated Search Dropdown by Market Category */}
           {isSearchOpen && searchQuery.trim() && (
             <div 
-              className="absolute left-0 right-0 mt-2 bg-[#0f172a] border border-slate-700/80 rounded-xl shadow-2xl overflow-hidden z-50 divide-y divide-slate-800/80"
+              className="absolute left-0 right-0 mt-2 bg-[#0c1220] border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-50 divide-y divide-slate-800/80 max-h-[460px] overflow-y-auto"
               onMouseLeave={() => setIsSearchOpen(false)}
             >
-              {filteredTickers.length > 0 ? (
-                filteredTickers.map((t) => (
-                  <div
-                    key={t.symbol}
-                    onClick={() => handleSelectSymbol(t.symbol)}
-                    className="p-3 hover:bg-slate-800/60 cursor-pointer flex items-center justify-between text-xs font-mono transition-colors"
-                  >
-                    <div>
-                      <div className="font-bold text-white flex items-center space-x-1.5">
-                        <span>{t.symbol}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">({t.asset_type.toUpperCase()})</span>
+              {totalResultsCount > 0 ? (
+                <div className="space-y-2 p-1.5">
+                  {/* Category A: Saham Indonesia */}
+                  {idxResults.length > 0 && (
+                    <div className="space-y-1">
+                      <div className="px-3 py-1 text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider bg-emerald-950/30 rounded flex items-center justify-between">
+                        <span>Saham Indonesia (BEI / IDX)</span>
+                        <span className="text-[9px] text-emerald-500/80">BERTopic Engine</span>
                       </div>
-                      <div className="text-[11px] text-slate-400 font-sans truncate max-w-[200px]">{t.name}</div>
+                      {idxResults.map((t) => (
+                        <div
+                          key={t.symbol}
+                          onClick={() => handleSelectSymbol(t.symbol)}
+                          className="p-2.5 hover:bg-slate-800/70 rounded-xl cursor-pointer flex items-center justify-between text-xs font-mono transition-colors"
+                        >
+                          <div>
+                            <div className="font-bold text-white flex items-center space-x-1.5">
+                              <span className="text-emerald-300">{t.symbol}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">IDX</span>
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-sans truncate max-w-[220px]">{t.name}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-slate-200">
+                              Rp {t.last_price?.toLocaleString('id-ID')}
+                            </div>
+                            <div className={`text-[10px] flex items-center justify-end space-x-0.5 font-bold ${
+                              (t.change_24h_percent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}>
+                              {(t.change_24h_percent || 0) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                              <span>{(t.change_24h_percent || 0) >= 0 ? '+' : ''}{t.change_24h_percent}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-slate-200">
-                        {t.base_currency === 'IDR' ? `Rp ${t.last_price?.toLocaleString('id-ID')}` : `$${t.last_price?.toLocaleString('en-US')}`}
+                  )}
+
+                  {/* Category B: Kripto 24/7 */}
+                  {cryptoResults.length > 0 && (
+                    <div className="space-y-1 pt-1">
+                      <div className="px-3 py-1 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-wider bg-purple-950/30 rounded flex items-center justify-between">
+                        <span>Pasar Kripto (Crypto 24/7)</span>
+                        <span className="text-[9px] text-purple-500/80">Microstructure Engine</span>
                       </div>
-                      <div className={`text-[11px] flex items-center justify-end space-x-0.5 font-bold ${
-                        (t.change_24h_percent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}>
-                        {(t.change_24h_percent || 0) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                        <span>{(t.change_24h_percent || 0) >= 0 ? '+' : ''}{t.change_24h_percent}%</span>
-                      </div>
+                      {cryptoResults.map((t) => (
+                        <div
+                          key={t.symbol}
+                          onClick={() => handleSelectSymbol(t.symbol)}
+                          className="p-2.5 hover:bg-slate-800/70 rounded-xl cursor-pointer flex items-center justify-between text-xs font-mono transition-colors"
+                        >
+                          <div>
+                            <div className="font-bold text-white flex items-center space-x-1.5">
+                              <span className="text-purple-300">{t.symbol}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">24/7</span>
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-sans truncate max-w-[220px]">{t.name}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-slate-200">
+                              ${t.last_price?.toLocaleString('en-US')}
+                            </div>
+                            <div className={`text-[10px] flex items-center justify-end space-x-0.5 font-bold ${
+                              (t.change_24h_percent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}>
+                              {(t.change_24h_percent || 0) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                              <span>{(t.change_24h_percent || 0) >= 0 ? '+' : ''}{t.change_24h_percent}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))
+                  )}
+
+                  {/* Category C: Pasar Global US */}
+                  {usResults.length > 0 && (
+                    <div className="space-y-1 pt-1">
+                      <div className="px-3 py-1 text-[10px] font-mono font-bold text-blue-400 uppercase tracking-wider bg-blue-950/30 rounded flex items-center justify-between">
+                        <span>Pasar Global (Wall Street)</span>
+                        <span className="text-[9px] text-blue-500/80">US Equities</span>
+                      </div>
+                      {usResults.map((t) => (
+                        <div
+                          key={t.symbol}
+                          onClick={() => handleSelectSymbol(t.symbol)}
+                          className="p-2.5 hover:bg-slate-800/70 rounded-xl cursor-pointer flex items-center justify-between text-xs font-mono transition-colors"
+                        >
+                          <div>
+                            <div className="font-bold text-white flex items-center space-x-1.5">
+                              <span className="text-blue-300">{t.symbol}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">US</span>
+                            </div>
+                            <div className="text-[11px] text-slate-400 font-sans truncate max-w-[220px]">{t.name}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-slate-200">
+                              ${t.last_price?.toLocaleString('en-US')}
+                            </div>
+                            <div className={`text-[10px] flex items-center justify-end space-x-0.5 font-bold ${
+                              (t.change_24h_percent || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}>
+                              {(t.change_24h_percent || 0) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                              <span>{(t.change_24h_percent || 0) >= 0 ? '+' : ''}{t.change_24h_percent}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
-                <div className="p-4 text-xs text-slate-500 text-center font-sans">Tidak ada aset ditemukan</div>
+                <div className="p-5 text-xs text-slate-500 text-center font-sans">
+                  Tidak ada aset ditemukan untuk pencarian "{searchQuery}"
+                </div>
               )}
             </div>
           )}

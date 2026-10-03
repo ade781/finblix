@@ -18,12 +18,43 @@ import {
   Sparkles,
   Zap,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Building2,
+  Landmark,
+  Coins,
+  Globe,
+  Clock,
+  SlidersHorizontal,
+  Search
 } from 'lucide-react';
 import { getDailyPrediction, getMarketHistory, getIndicators, trainModel, getModelStatus } from '../../api';
 import ChartToolbar from '../chart/ChartToolbar';
 import CandlestickChart from '../chart/CandlestickChart';
 import IndicatorSubChart from '../chart/IndicatorSubChart';
+
+
+// Curated Indonesian Stock Exchange (IDX / BEI) Metadata & Sector Classification
+const INDO_STOCKS_METADATA = {
+  'BBCA.JK': { sector: 'Perbankan Swasta', categoryTag: 'Tier 1 Mega Cap', focus: 'CASA Superior & KPR' },
+  'BBRI.JK': { sector: 'Perbankan BUMN / Mikro', categoryTag: 'Tier 1 Mega Cap', focus: 'Kredit UMKM & Kupedes' },
+  'BMRI.JK': { sector: 'Perbankan BUMN / Korporasi', categoryTag: 'Tier 1 Mega Cap', focus: 'Wholesale & Livin Digital' },
+  'BBNI.JK': { sector: 'Perbankan BUMN / Global', categoryTag: 'Tier 1 Large Cap', focus: 'Trade Finance & Global Remittance' },
+  'TLKM.JK': { sector: 'Telekomunikasi & Digital', categoryTag: 'Infrastruktur Telco', focus: 'IndiHome, Telkomsel & Data Center' },
+  'ASII.JK': { sector: 'Otomotif & Konglomerasi', categoryTag: 'Diversified Conglomerate', focus: 'Pangsa Pasar Otomotif & Alat Berat' },
+  'ADRO.JK': { sector: 'Energi & Tambang', categoryTag: 'Komoditas Energi', focus: 'Thermal Coal & Smelter Aluminium' },
+  'ICBP.JK': { sector: 'Konsumer FMCG', categoryTag: 'Consumer Defensive', focus: 'Indomie Global & Produk Susu' },
+  'UNVR.JK': { sector: 'Konsumer Non-Siklikal', categoryTag: 'FMCG Defensive', focus: 'Personal Care & Home Hygiene' },
+  'AMMN.JK': { sector: 'Pertambangan Emas & Tembaga', categoryTag: 'Mineral Strategis', focus: 'Tambang Batu Hijau & Smelter' },
+  'GOTO.JK': { sector: 'Teknologi & Ekosistem Digital', categoryTag: 'Tech Platform', focus: 'On-Demand, E-Commerce & FinTech' },
+  '^JKSE': { sector: 'Indeks Pasar Modal', categoryTag: 'Benchmark BEI', focus: 'Indeks Harga Saham Gabungan' },
+};
+
+const getAssetCategory = (sym) => {
+  if (!sym) return 'idx';
+  if (sym.endsWith('.JK') || sym === '^JKSE') return 'idx';
+  if (sym.includes('/') || sym.endsWith('USDT') || ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'].includes(sym)) return 'crypto';
+  return 'us';
+};
 
 export default function DailyPredictionView({ 
   tickers = [], 
@@ -33,6 +64,25 @@ export default function DailyPredictionView({
   const [symbol, setSymbol] = useState(defaultSymbol);
   const [timeframe, setTimeframe] = useState('1d');
   const [predictionData, setPredictionData] = useState(null);
+  
+  // Market Category Segregation State ('idx' = Saham Indonesia, 'crypto' = Pasar Kripto, 'us' = Pasar Global)
+  const [activeMarket, setActiveMarket] = useState(() => getAssetCategory(defaultSymbol || 'BBCA.JK'));
+  const [marketSearch, setMarketSearch] = useState('');
+
+  // Keep market category in sync if active symbol changes from outside
+  useEffect(() => {
+    const cat = getAssetCategory(symbol);
+    if (cat !== activeMarket) {
+      setActiveMarket(cat);
+    }
+  }, [symbol]);
+
+  // Keep symbol in sync if defaultSymbol prop updates
+  useEffect(() => {
+    if (defaultSymbol && defaultSymbol !== symbol) {
+      setSymbol(defaultSymbol);
+    }
+  }, [defaultSymbol]);
   const [bars, setBars] = useState([]);
   const [indicators, setIndicators] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -158,56 +208,283 @@ export default function DailyPredictionView({
   return (
     <div className="space-y-6">
       
-      {/* 1. Header Toolbar & Asset Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0c1220] border border-slate-800/80 rounded-2xl p-5 shadow-xl">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 border border-white/10 shrink-0">
-            <Compass className="w-5 h-5" />
+      {/* 1. Segregated Market Navigator & Asset Selection Cockpit */}
+      <div className="bg-[#0c1220] border border-slate-800/80 rounded-2xl p-5 shadow-2xl space-y-5">
+        
+        {/* Top Bar: Title, Market Categories Switcher & Refresh */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+          <div className="flex items-center space-x-3.5">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 border border-white/10 shrink-0">
+              <Compass className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-lg font-black tracking-tight text-white font-mono uppercase">
+                  FINBLIX PREDICTION COCKPIT
+                </h1>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+                  DUAL-ALGORITHM V2
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Pemisahan komputasi kuantitatif spesifik: BERTopic Finansial untuk Saham IDX & Mikrostruktur Likuiditas untuk Kripto.
+              </p>
+            </div>
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-white font-mono">
-                DASHBOARD PREDIKSI HARIAN
-              </h1>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
-                EOD HYBRID AI
+
+          {/* Action Buttons: Refresh Data */}
+          <div className="flex items-center space-x-2.5 self-end lg:self-auto">
+            <button
+              onClick={() => {
+                fetchPrediction(symbol);
+                fetchChartData(symbol, timeframe);
+                fetchStatus(symbol);
+              }}
+              disabled={loading || chartLoading || training}
+              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700/80 text-slate-200 text-xs font-mono font-bold flex items-center space-x-2 transition-all shadow-md active:scale-[0.98] disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading || chartLoading ? 'animate-spin' : ''}`} />
+              <span>{loading ? 'Mengalkulasi...' : 'Segarkan Data'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Market Category Segmented Tabs (Saham Indonesia vs Kripto vs Global) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          
+          {/* Tab 1: Saham Indonesia (BEI / IDX) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMarket('idx');
+              // Auto-select first stock if currently not an IDX asset
+              if (!symbol.endsWith('.JK') && symbol !== '^JKSE') {
+                setSymbol('BBCA.JK');
+              }
+            }}
+            className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
+              activeMarket === 'idx'
+                ? 'bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border-emerald-500/60 shadow-lg shadow-emerald-950/30 ring-1 ring-emerald-500/30'
+                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900 text-slate-400'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="flex items-center space-x-2 font-mono font-bold text-xs text-white">
+                <Building2 className={`w-4 h-4 ${activeMarket === 'idx' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span>SAHAM INDONESIA (IDX)</span>
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
+                activeMarket === 'idx'
+                  ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}>
+                12 EMITEN BLUE-CHIP
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Prediksi arah penutupan akhir hari berikutnya memadukan 60% Analisis Teknikal dan 40% Fundamental Sentimen Berita.
+            <p className="text-[11px] text-slate-400 line-clamp-1 font-sans">
+              Bursa Efek Indonesia (BEI) · BERTopic Topic Modeling & Dividen
             </p>
-          </div>
-        </div>
+          </button>
 
-        {/* Controls: Symbol Selector & Refresh Button */}
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <select
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              className="bg-slate-900/90 border border-slate-700/80 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-100 focus:outline-none focus:border-blue-500 shadow-inner cursor-pointer"
-            >
-              {tickers.map(t => (
-                <option key={t.symbol} value={t.symbol}>
-                  {t.symbol} - {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* Tab 2: Pasar Kripto (Crypto 24/7) */}
           <button
+            type="button"
             onClick={() => {
-              fetchPrediction(symbol);
-              fetchChartData(symbol, timeframe);
-              fetchStatus(symbol);
+              setActiveMarket('crypto');
+              if (symbol.endsWith('.JK') || symbol === '^JKSE' || ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'SPY'].includes(symbol)) {
+                setSymbol('BTC/USDT');
+              }
             }}
-            disabled={loading || chartLoading || training}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-mono font-bold flex items-center space-x-2 transition-all shadow-md shadow-blue-600/20 active:scale-[0.98]"
+            className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
+              activeMarket === 'crypto'
+                ? 'bg-gradient-to-r from-purple-950/40 via-slate-900 to-slate-900 border-purple-500/60 shadow-lg shadow-purple-950/30 ring-1 ring-purple-500/30'
+                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900 text-slate-400'
+            }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading || chartLoading ? 'animate-spin' : ''}`} />
-            <span>{loading ? 'Menghitung...' : 'Segarkan'}</span>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="flex items-center space-x-2 font-mono font-bold text-xs text-white">
+                <Coins className={`w-4 h-4 ${activeMarket === 'crypto' ? 'text-purple-400' : 'text-slate-400'}`} />
+                <span>PASAR KRIPTO (CRYPTO)</span>
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
+                activeMarket === 'crypto'
+                  ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}>
+                24/7 LIKUIDITAS
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 line-clamp-1 font-sans">
+              Pasar Global 24 Jam · Wick Rejection & Fear & Greed Contrarian
+            </p>
+          </button>
+
+          {/* Tab 3: Pasar Global (Wall Street US) */}
+          <button
+            type="button"
+            onClick={() => {
+              setActiveMarket('us');
+              if (symbol.endsWith('.JK') || symbol.includes('/') || symbol === '^JKSE') {
+                setSymbol('AAPL');
+              }
+            }}
+            className={`p-3.5 rounded-xl border text-left transition-all relative overflow-hidden group ${
+              activeMarket === 'us'
+                ? 'bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border-blue-500/60 shadow-lg shadow-blue-950/30 ring-1 ring-blue-500/30'
+                : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900 text-slate-400'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="flex items-center space-x-2 font-mono font-bold text-xs text-white">
+                <Globe className={`w-4 h-4 ${activeMarket === 'us' ? 'text-blue-400' : 'text-slate-400'}`} />
+                <span>PASAR GLOBAL (WALL ST)</span>
+              </span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
+                activeMarket === 'us'
+                  ? 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}>
+                NYSE & NASDAQ
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 line-clamp-1 font-sans">
+              Saham AS & Indeks S&P 500 · The Fed Macro & Tech Earnings
+            </p>
           </button>
         </div>
+
+        {/* Context Status Banner: Dynamic Bursa Information */}
+        <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex items-center space-x-2 text-slate-300">
+            <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            {activeMarket === 'idx' ? (
+              <span>
+                <strong className="text-white">Bursa Efek Indonesia (IDX)</strong> · Jakarta (WIB · UTC+7) · Sesi: <span className="text-emerald-400 font-semibold">09:00 - 16:00 WIB</span>
+              </span>
+            ) : activeMarket === 'crypto' ? (
+              <span>
+                <strong className="text-white">Pasar Kripto Global</strong> · Likuiditas 24 Jam / 7 Hari Non-Stop · Mata Uang: <span className="text-purple-400 font-semibold">USD ($)</span>
+              </span>
+            ) : (
+              <span>
+                <strong className="text-white">Pasar Saham Amerika Serikat</strong> · New York (EST) · Sesi: <span className="text-blue-400 font-semibold">20:30 - 03:00 WIB</span>
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2 text-[11px]">
+            <span className="text-slate-400">Mesin Aktif:</span>
+            <span className={`px-2 py-0.5 rounded font-bold border ${
+              activeMarket === 'idx' 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                : activeMarket === 'crypto'
+                  ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                  : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+            }`}>
+              {activeMarket === 'idx' ? 'EQUITY BERTOPIC ENGINE' : activeMarket === 'crypto' ? 'CRYPTO MICROSTRUCTURE ENGINE' : 'EQUITY QUANT ENGINE'}
+            </span>
+          </div>
+        </div>
+
+        {/* Filtered Asset Shelf (List Saham / Kripto Terpilih) */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-slate-400 flex items-center space-x-1.5 uppercase font-bold tracking-wider">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-blue-400" />
+              <span>
+                Daftar {activeMarket === 'idx' ? 'Saham Indonesia Unggulan (LQ45)' : activeMarket === 'crypto' ? 'Aset Kripto Teratas' : 'Saham Global Terpilih'}
+              </span>
+            </span>
+            <span className="text-[11px] text-slate-500">Klik aset untuk melihat analisis prediksi</span>
+          </div>
+
+          {/* Interactive Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            {tickers
+              .filter(t => getAssetCategory(t.symbol) === activeMarket)
+              .map(item => {
+                const isSelected = item.symbol === symbol;
+                const meta = INDO_STOCKS_METADATA[item.symbol];
+                const cleanSym = item.symbol.replace('.JK', '');
+                const isPos = (item.change_24h_percent || 0) >= 0;
+
+                return (
+                  <button
+                    key={item.symbol}
+                    type="button"
+                    onClick={() => setSymbol(item.symbol)}
+                    className={`p-3 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between group active:scale-[0.98] ${
+                      isSelected
+                        ? activeMarket === 'idx'
+                          ? 'bg-emerald-950/30 border-emerald-500/80 shadow-md shadow-emerald-950/40 ring-1 ring-emerald-500/50'
+                          : activeMarket === 'crypto'
+                            ? 'bg-purple-950/30 border-purple-500/80 shadow-md shadow-purple-950/40 ring-1 ring-purple-500/50'
+                            : 'bg-blue-950/30 border-blue-500/80 shadow-md shadow-blue-950/40 ring-1 ring-blue-500/50'
+                        : 'bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono font-black text-sm text-white group-hover:text-blue-400 transition-colors">
+                          {cleanSym}
+                        </span>
+                        {isSelected && (
+                          <span className={`w-2 h-2 rounded-full animate-ping ${
+                            activeMarket === 'idx' ? 'bg-emerald-400' : activeMarket === 'crypto' ? 'bg-purple-400' : 'bg-blue-400'
+                          }`} />
+                        )}
+                      </div>
+                      
+                      <div className="text-[10px] text-slate-400 truncate mb-2 font-sans" title={item.name}>
+                        {meta ? meta.sector : item.name}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-800/60 font-mono">
+                      <div className="text-xs font-bold text-slate-200">
+                        {item.base_currency === 'IDR' || item.symbol.endsWith('.JK') || item.symbol === '^JKSE'
+                          ? `Rp ${item.last_price?.toLocaleString('id-ID')}`
+                          : `$${item.last_price?.toLocaleString('en-US')}`
+                        }
+                      </div>
+                      <div className={`text-[10px] flex items-center space-x-0.5 font-bold mt-0.5 ${
+                        isPos ? 'text-emerald-400' : 'text-rose-400'
+                      }`}>
+                        {isPos ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        <span>{isPos ? '+' : ''}{item.change_24h_percent || 0}%</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+          </div>
+
+          {/* Quick Dropdown Fallback for Search / Mobile */}
+          <div className="pt-2 flex items-center justify-between text-xs text-slate-400">
+            <span className="text-[11px] font-mono">
+              Aset Terpilih: <strong className="text-white">{symbol}</strong> - {currentAsset?.name}
+            </span>
+
+            {/* Quick selector dropdown */}
+            <div className="flex items-center space-x-2">
+              <span className="text-[11px] font-mono text-slate-500 hidden sm:inline">Pindah Cepat:</span>
+              <select
+                value={symbol}
+                onChange={(e) => setSymbol(e.target.value)}
+                className="bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+              >
+                {tickers
+                  .filter(t => getAssetCategory(t.symbol) === activeMarket)
+                  .map(t => (
+                    <option key={t.symbol} value={t.symbol}>
+                      {t.symbol} - {t.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {error && (
