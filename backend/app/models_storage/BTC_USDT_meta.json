@@ -1,10 +1,10 @@
 {
   "symbol": "BTC/USDT",
-  "trained_at": "2026-10-03 17:57:33 UTC",
+  "trained_at": "2026-10-03 18:04:55 UTC",
   "dataset_bars": 1000,
   "samples_trained": 775,
   "samples_tested": 194,
-  "training_duration_seconds": 7.76,
+  "training_duration_seconds": 6.18,
   "metrics": {
     "train_accuracy_pct": 95.23,
     "cv_5fold_mean_pct": 50.7,
@@ -49,6 +49,6 @@
       "importance": 3.94
     }
   ],
-  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",
+  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest + Gradient Boosting + Extra Trees)",
   "status": "DEPLOYED_ACTIVE"
 }

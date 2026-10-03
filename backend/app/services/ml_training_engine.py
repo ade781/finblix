@@ -11,7 +11,8 @@ import numpy as np
 import pandas as pd
 import joblib
 
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier, VotingClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, ExtraTreesClassifier, HistGradientBoostingClassifier, VotingClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
@@ -318,46 +319,86 @@ class MLTrainingEngine:
         X_train_scaled = scaler.fit_transform(X_train)
         X_test_scaled = scaler.transform(X_test)
 
-        # 5. Multi-Model Architecture & Ensemble
-        # Model 1: Random Forest (500 Pohon Keputusan, Regularisasi Kokoh)
-        rf = RandomForestClassifier(
-            n_estimators=n_estimators_rf,
-            max_depth=6,
-            min_samples_split=6,
-            min_samples_leaf=4,
-            max_features='sqrt',
-            random_state=42,
-            n_jobs=-1
-        )
+        # 5. Asset-Specific Architecture & Ensemble Selection
+        is_stock = (asset.asset_type == "stock") or (".JK" in symbol)
 
-        # Model 2: Gradient Boosting (400 Boosting Stages, Subsampling)
-        gb = GradientBoostingClassifier(
-            n_estimators=n_estimators_gb,
-            learning_rate=0.02,
-            max_depth=4,
-            min_samples_split=6,
-            min_samples_leaf=4,
-            subsample=0.8,
-            random_state=42
-        )
-
-        # Model 3: Extra Trees Classifier (300 Pohon Acak Ekstrem)
-        et = ExtraTreesClassifier(
-            n_estimators=n_estimators_et,
-            max_depth=6,
-            min_samples_split=6,
-            min_samples_leaf=4,
-            max_features='sqrt',
-            random_state=42,
-            n_jobs=-1
-        )
-
-        # Tri-Model Soft Voting Ensemble
-        ensemble = VotingClassifier(
-            estimators=[('rf', rf), ('gb', gb), ('et', et)],
-            voting='soft',
-            weights=[2, 2, 1]
-        )
+        if is_stock:
+            # Model Arsitektur Khusus Saham IDX: Quad-Learner Neural-Tree Hybrid
+            # Mengombinasikan Non-linear Tree Bagging, Histogram-based Boosting, dan Deep Feed-Forward Neural Network
+            rf = RandomForestClassifier(
+                n_estimators=n_estimators_rf,
+                max_depth=6,
+                min_samples_split=6,
+                min_samples_leaf=4,
+                max_features='sqrt',
+                random_state=42,
+                n_jobs=-1
+            )
+            hgb = HistGradientBoostingClassifier(
+                max_iter=150,
+                learning_rate=0.03,
+                max_leaf_nodes=15,
+                l2_regularization=1.5,
+                random_state=42
+            )
+            mlp = MLPClassifier(
+                hidden_layer_sizes=(64, 32),
+                activation='relu',
+                alpha=0.01,
+                max_iter=350,
+                random_state=42,
+                early_stopping=True
+            )
+            et = ExtraTreesClassifier(
+                n_estimators=n_estimators_et,
+                max_depth=6,
+                min_samples_split=6,
+                min_samples_leaf=4,
+                max_features='sqrt',
+                random_state=42,
+                n_jobs=-1
+            )
+            ensemble = VotingClassifier(
+                estimators=[('rf', rf), ('hgb', hgb), ('mlp', mlp), ('et', et)],
+                voting='soft',
+                weights=[2, 2, 2, 1]
+            )
+            arch_name = "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)"
+        else:
+            # Model Arsitektur Khusus Kripto: Tri-Model Soft Voting Ensemble
+            rf = RandomForestClassifier(
+                n_estimators=n_estimators_rf,
+                max_depth=6,
+                min_samples_split=6,
+                min_samples_leaf=4,
+                max_features='sqrt',
+                random_state=42,
+                n_jobs=-1
+            )
+            gb = GradientBoostingClassifier(
+                n_estimators=n_estimators_gb,
+                learning_rate=0.02,
+                max_depth=4,
+                min_samples_split=6,
+                min_samples_leaf=4,
+                subsample=0.8,
+                random_state=42
+            )
+            et = ExtraTreesClassifier(
+                n_estimators=n_estimators_et,
+                max_depth=6,
+                min_samples_split=6,
+                min_samples_leaf=4,
+                max_features='sqrt',
+                random_state=42,
+                n_jobs=-1
+            )
+            ensemble = VotingClassifier(
+                estimators=[('rf', rf), ('gb', gb), ('et', et)],
+                voting='soft',
+                weights=[2, 2, 1]
+            )
+            arch_name = "Tri-Model Soft Voting Ensemble (Random Forest + Gradient Boosting + Extra Trees)"
 
         # 6. 5-Fold TimeSeriesSplit Cross Validation
         tscv = TimeSeriesSplit(n_splits=5)
@@ -381,13 +422,15 @@ class MLTrainingEngine:
         except Exception:
             auc = 50.0
 
-        # Feature Importance Extraction dari Random Forest & Extra Trees
+        # Feature Importance Extraction
         rf_fitted = ensemble.named_estimators_['rf']
         et_fitted = ensemble.named_estimators_['et']
-        gb_fitted = ensemble.named_estimators_['gb']
-        
-        # Combined feature importance
-        combined_importances = (rf_fitted.feature_importances_ + et_fitted.feature_importances_ + gb_fitted.feature_importances_) / 3.0
+        if 'gb' in ensemble.named_estimators_:
+            gb_fitted = ensemble.named_estimators_['gb']
+            combined_importances = (rf_fitted.feature_importances_ + et_fitted.feature_importances_ + gb_fitted.feature_importances_) / 3.0
+        else:
+            combined_importances = (rf_fitted.feature_importances_ + et_fitted.feature_importances_) / 2.0
+
         feature_importance_list = [
             {"feature": f, "importance": round(float(imp * 100), 2)}
             for f, imp in sorted(zip(feature_cols, combined_importances), key=lambda x: x[1], reverse=True)
@@ -425,7 +468,7 @@ class MLTrainingEngine:
                 "roc_auc_pct": auc
             },
             "top_features": feature_importance_list[:8],
-            "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",
+            "model_architecture": arch_name,
             "status": "DEPLOYED_ACTIVE"
         }
 

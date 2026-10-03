@@ -1,54 +1,54 @@
 {
   "symbol": "BBCA.JK",
-  "trained_at": "2026-10-03 17:57:47 UTC",
+  "trained_at": "2026-10-03 18:05:06 UTC",
   "dataset_bars": 718,
   "samples_trained": 549,
   "samples_tested": 138,
-  "training_duration_seconds": 7.25,
+  "training_duration_seconds": 4.65,
   "metrics": {
-    "train_accuracy_pct": 91.44,
-    "cv_5fold_mean_pct": 54.73,
-    "cv_5fold_std_pct": 3.7,
-    "test_accuracy_pct": 62.32,
-    "precision_pct": 56.14,
-    "recall_pct": 54.24,
-    "f1_score_pct": 55.17,
-    "roc_auc_pct": 62.88
+    "train_accuracy_pct": 90.89,
+    "cv_5fold_mean_pct": 56.04,
+    "cv_5fold_std_pct": 5.25,
+    "test_accuracy_pct": 64.49,
+    "precision_pct": 60.42,
+    "recall_pct": 49.15,
+    "f1_score_pct": 54.21,
+    "roc_auc_pct": 62.52
   },
   "top_features": [
     {
       "feature": "macd_accel",
-      "importance": 8.08
+      "importance": 7.01
     },
     {
       "feature": "price_to_ema50",
-      "importance": 5.56
-    },
-    {
-      "feature": "ema20_to_ema50",
-      "importance": 5.08
-    },
-    {
-      "feature": "macd_hist",
-      "importance": 5.06
+      "importance": 5.71
     },
     {
       "feature": "price_to_weekly_ema",
-      "importance": 4.99
-    },
-    {
-      "feature": "ema9_slope",
-      "importance": 4.89
-    },
-    {
-      "feature": "atr_norm",
-      "importance": 4.66
+      "importance": 5.11
     },
     {
       "feature": "lower_wick",
-      "importance": 4.61
+      "importance": 4.94
+    },
+    {
+      "feature": "ema20_to_ema50",
+      "importance": 4.94
+    },
+    {
+      "feature": "ema9_slope",
+      "importance": 4.75
+    },
+    {
+      "feature": "ret_1d",
+      "importance": 4.62
+    },
+    {
+      "feature": "atr_norm",
+      "importance": 4.53
     }
   ],
-  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",
+  "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",
   "status": "DEPLOYED_ACTIVE"
 }
