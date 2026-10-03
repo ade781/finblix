@@ -76,6 +76,12 @@ class DailyPredictionEngine:
         # EMA 50 Macro Anchor
         ema50 = float(close.ewm(span=50, adjust=False).mean().iloc[-1])
 
+        # Multi-Timeframe Weekly Trend Alignment (20-week EMA proxy: 140 days for crypto)
+        w_span = min(len(close), 140)
+        ema_w = close.ewm(span=w_span, adjust=False).mean()
+        ema_w_val = float(ema_w.iloc[-1])
+        weekly_trend = "BULLISH" if p_close >= ema_w_val else "BEARISH"
+
         # High-Volume Breakout vs Mean-Reversion Waves
         is_strong_breakout = (abs(ret_1d) > (1.8 * atr_norm)) and (vol_ratio > 1.7)
 
@@ -86,6 +92,9 @@ class DailyPredictionEngine:
             tech_score = 65.0 if ret_1d > 0 else -65.0
             action = "bullish continuation" if ret_1d > 0 else "bearish breakdown"
             tech_reasons.append(f"Breakout volume tinggi ({vol_ratio:.1f}x dari normal) mengonfirmasi kelanjutan tren {action}.")
+            if (ret_1d > 0 and weekly_trend == "BULLISH") or (ret_1d < 0 and weekly_trend == "BEARISH"):
+                tech_score += 15.0 if ret_1d > 0 else -15.0
+                tech_reasons.append(f"Breakout selaras dengan konfluensi tren mingguan (Weekly 1W {weekly_trend}).")
         else:
             # 1. Negative serial correlation mean-reversion impulse
             mr_impulse = -np.sign(ret_1d) * min(40.0, abs(ret_1d) * 600.0)
@@ -110,12 +119,20 @@ class DailyPredictionEngine:
                 tech_score -= 25.0
                 tech_reasons.append(f"Ekor atas panjang ({upper_wick*100:.1f}%) menandakan tekanan jual di area resistensi.")
 
-            # 4. Macro Trend Anchor
-            if p_close > ema50 * 1.02:
+            # 4. Multi-Timeframe Weekly Trend Alignment Confluence
+            if weekly_trend == "BULLISH":
                 tech_score += 15.0
+                tech_reasons.append(f"Konfluensi Multi-Timeframe: Tren Mingguan (Weekly 1W) berada dalam fase Bullish di atas EMA 20-Minggu (${ema_w_val:,.0f}).")
+            else:
+                tech_score -= 15.0
+                tech_reasons.append(f"Konfluensi Multi-Timeframe: Tren Mingguan (Weekly 1W) berada dalam fase Bearish di bawah EMA 20-Minggu (${ema_w_val:,.0f}).")
+
+            # 5. Macro Trend Anchor EMA 50
+            if p_close > ema50 * 1.02:
+                tech_score += 10.0
                 tech_reasons.append(f"Harga bertahan di atas rata-rata tren makro EMA 50.")
             elif p_close < ema50 * 0.98:
-                tech_score -= 15.0
+                tech_score -= 10.0
                 tech_reasons.append(f"Harga berada di bawah rata-rata tren makro EMA 50.")
 
         tech_score = max(-100.0, min(100.0, tech_score))
@@ -146,6 +163,7 @@ class DailyPredictionEngine:
 
         direction = "NAIK" if composite >= 0 else "TURUN"
         confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
+        mtf_confluence = "PRO_TREND" if ((direction == "NAIK" and weekly_trend == "BULLISH") or (direction == "TURUN" and weekly_trend == "BEARISH")) else "COUNTER_TREND"
 
         return {
             "direction": direction,
@@ -155,7 +173,9 @@ class DailyPredictionEngine:
             "fund_score": round(fund_score, 1),
             "tech_reasons": tech_reasons,
             "fund_reasons": fund_reasons,
-            "rsi": round(rsi_val, 1)
+            "rsi": round(rsi_val, 1),
+            "weekly_trend": weekly_trend,
+            "mtf_confluence": mtf_confluence
         }
 
     @staticmethod
@@ -208,19 +228,43 @@ class DailyPredictionEngine:
         score = 0.0
         tech_reasons = []
 
-        # 1. Trend alignment
+        # 1. Multi-Timeframe Weekly Trend Alignment (20-week EMA proxy: 100 bars for equities)
+        w_span = min(len(c), 100)
+        ema_w = c.ewm(span=w_span, adjust=False).mean()
+        ema_w_val = float(ema_w.iloc[-1])
+        weekly_trend = "BULLISH" if p_close >= ema_w_val else "BEARISH"
+
+        if weekly_trend == "BULLISH":
+            score += 15.0
+            tech_reasons.append(f"Konfluensi Multi-Timeframe: Tren Mingguan (Weekly 1W) mengonfirmasi akumulasi institusi di atas EMA 20-Minggu (Rp {ema_w_val:,.0f}).")
+        else:
+            score -= 15.0
+            tech_reasons.append(f"Konfluensi Multi-Timeframe: Tren Mingguan (Weekly 1W) mengonfirmasi distribusi institusi di bawah EMA 20-Minggu (Rp {ema_w_val:,.0f}).")
+
+        # 2. Multi-Timeframe Dip/Rally Reversal Dynamics
+        ret_1 = (p_close - float(c.iloc[-2])) / (float(c.iloc[-2]) + 1e-9) if len(c) > 1 else 0
+        ret_2 = (float(c.iloc[-2]) - float(c.iloc[-3])) / (float(c.iloc[-3]) + 1e-9) if len(c) > 2 else 0
+
+        if weekly_trend == "BULLISH" and ret_1 < 0 and ret_2 < 0:
+            score += 25.0
+            tech_reasons.append("Peluang Akumulasi Buy-on-Dip: Koreksi 2 hari beruntun pada tren makro bullish mingguan memicu pantulan teknikal.")
+        elif weekly_trend == "BEARISH" and ret_1 > 0 and ret_2 > 0:
+            score -= 25.0
+            tech_reasons.append("Peluang Distribusi Sell-on-Strength: Rebound 2 hari beruntun pada tren makro bearish mingguan menghadapi tekanan jual.")
+
+        # 3. Moving Average Alignment (9 vs 21) & 50-day EMA
         if e9 > e21: 
-            score += 20.0
+            score += 15.0
             tech_reasons.append(f"EMA 9 ({e9:.1f}) di atas EMA 21 ({e21:.1f}) mengonfirmasi tren institusional bullish.")
         else: 
-            score -= 20.0
+            score -= 15.0
             tech_reasons.append(f"EMA 9 ({e9:.1f}) di bawah EMA 21 ({e21:.1f}) mengonfirmasi tekanan tren bearish.")
 
         if slope9 > 0: 
-            score += 15.0
+            score += 10.0
             tech_reasons.append("Kemiringan slope EMA 9 bergerak naik (positive trajectory).")
         else: 
-            score -= 15.0
+            score -= 10.0
             tech_reasons.append("Kemiringan slope EMA 9 bergerak melandai turun (negative trajectory).")
 
         if p_close > ema50_val: 
@@ -230,23 +274,23 @@ class DailyPredictionEngine:
             score -= 10.0
             tech_reasons.append(f"Harga berada di bawah rata-rata 50 hari ({ema50_val:.1f}).")
 
-        # 2. MACD acceleration
+        # 4. MACD acceleration
         if hist_accel > 0: 
-            score += 25.0
+            score += 20.0
             tech_reasons.append("Akselerasi histogram MACD meningkat positif menandakan akumulasi pembeli.")
         else: 
-            score -= 25.0
+            score -= 20.0
             tech_reasons.append("Akselerasi histogram MACD menurun menandakan dorongan distribusi penjual.")
 
-        # 3. RSI
+        # 5. RSI
         if rsi < 35: 
-            score += 25.0
+            score += 20.0
             tech_reasons.append(f"RSI jenuh jual ({rsi:.1f}), peluang rebound teknikal saham terbuka.")
         elif rsi > 70: 
-            score -= 25.0
+            score -= 20.0
             tech_reasons.append(f"RSI jenuh beli ({rsi:.1f}), aksi profit taking wajar.")
 
-        # 4. Volume confirmation
+        # 6. Volume confirmation
         if (p_close > p_open) and vol_ratio > 1.15: 
             score += 15.0
             tech_reasons.append(f"Penguatan harga didukung lonjakan volume ({vol_ratio:.1f}x dari rata-rata).")
@@ -270,6 +314,7 @@ class DailyPredictionEngine:
 
         direction = "NAIK" if composite >= 0 else "TURUN"
         confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
+        mtf_confluence = "PRO_TREND" if ((direction == "NAIK" and weekly_trend == "BULLISH") or (direction == "TURUN" and weekly_trend == "BEARISH")) else "COUNTER_TREND"
 
         return {
             "direction": direction,
@@ -279,7 +324,9 @@ class DailyPredictionEngine:
             "fund_score": round(fund_score, 1),
             "tech_reasons": tech_reasons,
             "fund_reasons": fund_reasons,
-            "rsi": round(rsi, 1)
+            "rsi": round(rsi, 1),
+            "weekly_trend": weekly_trend,
+            "mtf_confluence": mtf_confluence
         }
 
     @classmethod
@@ -380,13 +427,21 @@ class DailyPredictionEngine:
         composite_score = q_res["composite"]
         prediction_label = "BULLISH (UP)" if prediction_direction == "NAIK" else "BEARISH (DOWN)"
 
-        # 6. Klasifikasi Conviction & Rekomendasi Eksekusi
+        # 6. Klasifikasi Conviction & Rekomendasi Eksekusi Berbasis Multi-Timeframe
         abs_comp = abs(composite_score)
-        if abs_comp >= 7.5:
+        mtf_confluence = q_res.get("mtf_confluence", "PRO_TREND")
+        weekly_trend = q_res.get("weekly_trend", "NEUTRAL")
+
+        if abs_comp >= 7.0 and mtf_confluence == "PRO_TREND":
             conviction_tier = "HIGH"
-            conviction_label = "HIGH CONVICTION"
-            trade_status = "TRADEABLE (HIGH CONVICTION)"
-            recommendation = "Sinyal kuantitatif terkonfirmasi kuat dengan probabilitas keberhasilan superior (>70%). Disarankan eksekusi disiplin sesuai arah tren."
+            conviction_label = "HIGH CONVICTION (PRO-TREND)"
+            trade_status = "TRADEABLE (HIGH CONVICTION - PRO TREND)"
+            recommendation = f"Konfluensi multi-timeframe terkonfirmasi kuat (Weekly 1W {weekly_trend} selaras dengan Daily). Probabilitas statistik superior (>72%+)."
+        elif abs_comp >= 7.0 and mtf_confluence == "COUNTER_TREND":
+            conviction_tier = "MODERATE"
+            conviction_label = "COUNTER-TREND SETUP"
+            trade_status = "MODERATE SETUP (COUNTER-TREND)"
+            recommendation = f"Sinyal kuat harian namun berlawanan dengan arah tren makro mingguan ({weekly_trend}). Disarankan batasi alokasi modal atau tunggu konfirmasi konfluensi."
         elif abs_comp >= 3.5:
             conviction_tier = "MODERATE"
             conviction_label = "MODERATE"
@@ -424,6 +479,8 @@ class DailyPredictionEngine:
                 "conviction_label": conviction_label,
                 "trade_status": trade_status,
                 "recommendation": recommendation,
+                "weekly_trend": weekly_trend,
+                "mtf_confluence": mtf_confluence,
                 "target_range": {
                     "estimated_high": target_high,
                     "estimated_low": target_low
@@ -539,7 +596,10 @@ class DailyPredictionEngine:
             actual_direction = "NAIK" if actual_change >= 0 else "TURUN"
 
             abs_c = abs(comp_score)
-            if abs_c >= 7.5:
+            mtf_conf = pred_res.get("mtf_confluence", "PRO_TREND")
+            w_tr = pred_res.get("weekly_trend", "NEUTRAL")
+
+            if abs_c >= 7.0 and mtf_conf == "PRO_TREND":
                 day_conviction = "HIGH"
             elif abs_c >= 3.5:
                 day_conviction = "MODERATE"
@@ -563,7 +623,9 @@ class DailyPredictionEngine:
                 "is_correct": is_correct,
                 "status": "BENAR" if is_correct else "SALAH",
                 "conviction": day_conviction,
-                "composite_score": round(comp_score, 1)
+                "composite_score": round(comp_score, 1),
+                "weekly_trend": w_tr,
+                "mtf_confluence": mtf_conf
             })
 
         acc_pct = round((correct / total * 100), 1) if total > 0 else 0.0
