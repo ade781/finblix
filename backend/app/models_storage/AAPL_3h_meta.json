@@ -1,0 +1,12 @@
+{
+  "symbol": "AAPL",
+  "target_horizon": "3_HOURS",
+  "training_window": "7_DAYS_HOURLY",
+  "samples_trained": 28,
+  "samples_tested": 10,
+  "test_accuracy_pct": 10.0,
+  "cv_accuracy_pct": 52.38,
+  "roc_auc_pct": 11.11,
+  "duration_seconds": 1.42,
+  "trained_at": "2026-10-03 19:06:17 UTC"
+}

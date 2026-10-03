@@ -1,0 +1,12 @@
+{
+  "symbol": "BNB/USDT",
+  "target_horizon": "3_HOURS",
+  "training_window": "7_DAYS_HOURLY",
+  "samples_trained": 114,
+  "samples_tested": 39,
+  "test_accuracy_pct": 48.72,
+  "cv_accuracy_pct": 44.05,
+  "roc_auc_pct": 45.11,
+  "duration_seconds": 1.63,
+  "trained_at": "2026-10-03 19:00:33 UTC"
+}

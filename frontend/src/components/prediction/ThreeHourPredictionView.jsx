@@ -11,6 +11,7 @@ import {
   CryptoOrbitIcon, 
   GlobalMarketIcon 
 } from '../icons/CustomIcons';
+import ThreeHourProjectionChart from './ThreeHourProjectionChart';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -126,11 +127,13 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
     return true;
   });
 
-  const pred = predictionData?.prediction_3h;
+  const pred = predictionData?.prediction_3h || predictionData?.prediction;
   const targetPrice = predictionData?.target_price;
   const microSignals = predictionData?.micro_signals;
   const backtest = predictionData?.backtest_7d_accuracy;
-  const newsSentiment = predictionData?.daily_news_sentiment;
+  const newsSentiment = predictionData?.daily_news_sentiment || predictionData?.scraped_news_summary;
+  const marketSession = predictionData?.market_session;
+  const trajectoryData = predictionData?.trajectory_5m;
 
   const isUp = pred?.direction === 'NAIK';
   const isDown = pred?.direction === 'TURUN';
@@ -330,7 +333,7 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
                 </div>
                 <div className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700 flex items-center space-x-1.5">
                   <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Target: {predictionData?.target_time_utc || 'T+3 Jam'}</span>
+                  <span>Target: {marketSession?.target_time_wib || predictionData?.target_time_utc || 'T+3 Jam'}</span>
                 </div>
               </div>
 
@@ -460,6 +463,15 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
               </div>
             </div>
           </div>
+
+          {/* CENTERPIECE: INTERACTIVE 3-HOUR PROJECTION TRAJECTORY CHART (5M VOLATILITY FUNNEL) */}
+          <ThreeHourProjectionChart
+            trajectoryData={trajectoryData}
+            direction={pred?.direction}
+            currentPrice={targetPrice?.current_price}
+            targetPrice={targetPrice?.projected_target_price}
+            marketSession={marketSession}
+          />
 
           {/* Secondary Bento Row: Micro-Momentum Indicators & Daily Bulk News Sentiment */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -598,9 +610,18 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
                       Sentimen Scraping Massal Berita Harian
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded">
-                    {newsSentiment?.article_count || 0} Artikel Terkait
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                      newsSentiment?.source_type === 'EMITEN_LANGSUNG'
+                        ? 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60'
+                        : 'bg-purple-950/60 text-purple-300 border-purple-800/60'
+                    }`}>
+                      {newsSentiment?.source_description || 'Sentimen Terkait'}
+                    </span>
+                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded">
+                      {newsSentiment?.article_count || 0} Artikel
+                    </span>
+                  </div>
                 </div>
 
                 {/* Sentiment Score Gauge */}

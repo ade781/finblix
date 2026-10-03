@@ -27,6 +27,204 @@ class ThreeHourPredictionEngine:
     def _slugify(symbol: str) -> str:
         return symbol.replace("/", "_").replace(".", "_")
 
+    @staticmethod
+    def determine_market_session(asset: Asset) -> Dict[str, Any]:
+        """
+        Mendeteksi jam perdagangan aktif vs bursa tutup secara presisi untuk Kripto vs Saham IDX.
+        """
+        now_utc = datetime.now(timezone.utc)
+        now_wib = now_utc + timedelta(hours=7)
+        symbol = asset.symbol
+        is_crypto = asset.asset_type == "crypto" or "/" in symbol
+        is_idx = symbol.endswith(".JK") or symbol == "^JKSE"
+
+        if is_crypto:
+            target_utc = now_utc + timedelta(hours=3)
+            target_wib = now_wib + timedelta(hours=3)
+            return {
+                "status": "OPEN_24_7",
+                "badge": "PASAR AKTIF 24/7",
+                "is_open": True,
+                "session_name": "Perdagangan Kripto 24/7 Global",
+                "current_time_wib": now_wib.strftime("%H:%M WIB"),
+                "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "target_time_wib": target_wib.strftime("%H:%M WIB"),
+                "horizon_label": f"3 Jam ke Depan Real-time ({now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
+            }
+        elif is_idx:
+            weekday = now_wib.weekday()  # 0=Senin, ..., 4=Jumat, 5=Sabtu, 6=Minggu
+            current_minutes = now_wib.hour * 60 + now_wib.minute
+
+            is_weekday = weekday < 5
+            is_sesi_1 = False
+            is_sesi_2 = False
+
+            if is_weekday:
+                if weekday == 4:  # Jumat
+                    is_sesi_1 = 540 <= current_minutes < 690   # 09:00 - 11:30
+                    is_sesi_2 = 840 <= current_minutes < 960   # 14:00 - 16:00
+                else:
+                    is_sesi_1 = 540 <= current_minutes < 720   # 09:00 - 12:00
+                    is_sesi_2 = 810 <= current_minutes < 960   # 13:30 - 16:00
+
+            if is_sesi_1 or is_sesi_2:
+                target_utc = now_utc + timedelta(hours=3)
+                target_wib = now_wib + timedelta(hours=3)
+                return {
+                    "status": "REGULAR_OPEN",
+                    "badge": "BURSA IDX BUKA",
+                    "is_open": True,
+                    "session_name": "Sesi Perdagangan Reguler Bursa Efek Indonesia",
+                    "current_time_wib": now_wib.strftime("%H:%M WIB"),
+                    "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                    "target_time_wib": target_wib.strftime("%H:%M WIB"),
+                    "horizon_label": f"3 Jam Sesi Berjalan ({now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
+                }
+            else:
+                # Bursa tutup: Proyeksikan 3 Jam Sesi Pembukaan Berikutnya (09:00 - 12:00 WIB)
+                days_to_add = 1
+                if weekday == 4:  # Jumat malam -> Senin
+                    days_to_add = 3
+                elif weekday == 5:  # Sabtu -> Senin
+                    days_to_add = 2
+                elif weekday == 6:  # Minggu -> Senin
+                    days_to_add = 1
+                elif current_minutes >= 960:  # Hari kerja setelah 16:00
+                    days_to_add = 1 if weekday < 4 else 3
+                else:  # Hari kerja sebelum 09:00
+                    days_to_add = 0
+
+                next_date = now_wib + timedelta(days=days_to_add)
+                next_open = next_date.replace(hour=9, minute=0, second=0, microsecond=0)
+                next_target = next_date.replace(hour=12, minute=0, second=0, microsecond=0)
+
+                return {
+                    "status": "MARKET_CLOSED",
+                    "badge": "BURSA IDX TUTUP",
+                    "is_open": False,
+                    "session_name": "Bursa Tutup (Luar Jam Perdagangan Resmi)",
+                    "current_time_wib": now_wib.strftime("%H:%M WIB"),
+                    "target_time_utc": (next_target - timedelta(hours=7)).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                    "target_time_wib": next_target.strftime("%H:%M WIB"),
+                    "horizon_label": f"Proyeksi Sesi Pembukaan ({next_open.strftime('%d %b 09:00')} - 12:00 WIB)"
+                }
+        else:
+            target_utc = now_utc + timedelta(hours=3)
+            target_wib = now_wib + timedelta(hours=3)
+            return {
+                "status": "GLOBAL_MARKET",
+                "badge": "WALL STREET (US)",
+                "is_open": True,
+                "session_name": "Pasar Saham Global",
+                "current_time_wib": now_wib.strftime("%H:%M WIB"),
+                "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "target_time_wib": target_wib.strftime("%H:%M WIB"),
+                "horizon_label": f"3 Jam ke Depan ({now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
+            }
+
+    @classmethod
+    async def fetch_or_synthesize_5m_history(
+        cls, 
+        asset: Asset, 
+        current_price: float, 
+        bars_1h: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Mengambil atau menyintesis 36 bar data historis 5-menit terakhir (3 jam ke belakang).
+        """
+        points = []
+        now_ts = int(time.time())
+
+        if asset.asset_type == "crypto" or "/" in asset.symbol:
+            try:
+                live_5m = await CryptoService.fetch_binance_bars(asset.symbol, timeframe="5m", limit=36)
+                if live_5m and len(live_5m) >= 15:
+                    for b in live_5m:
+                        dt = datetime.fromtimestamp(b["time"], timezone.utc) + timedelta(hours=7)
+                        p = float(b["close"])
+                        points.append({
+                            "timestamp": b["time"],
+                            "time_label": dt.strftime("%H:%M"),
+                            "price": round(p, 2 if p >= 10 else 4),
+                            "is_historical": True
+                        })
+                    return points
+            except Exception as e:
+                print(f"[3HEngine] Live 5m fetch warning: {e}")
+
+        # Sintesis 36 bar 5-menit dari pergerakan bar 1-jam terakhir
+        recent_1h = bars_1h[-4:] if len(bars_1h) >= 4 else bars_1h
+        anchor_prices = [float(b["close"]) for b in recent_1h]
+        if not anchor_prices:
+            anchor_prices = [current_price]
+
+        p_start = anchor_prices[0]
+        p_end = current_price
+        for i in range(36):
+            step_back = 35 - i
+            t_bar = now_ts - (step_back * 300)
+            tau = i / 35.0 if 35.0 > 0 else 1.0
+            noise = np.sin(i * 0.7) * (current_price * 0.0008)
+            interp_p = p_start + (p_end - p_start) * tau + noise
+            if i == 35:
+                interp_p = current_price
+            dt = datetime.fromtimestamp(t_bar, timezone.utc) + timedelta(hours=7)
+            points.append({
+                "timestamp": t_bar,
+                "time_label": dt.strftime("%H:%M"),
+                "price": round(float(interp_p), 2 if float(interp_p) >= 10 else 4),
+                "is_historical": True
+            })
+        return points
+
+    @classmethod
+    def generate_5m_trajectory(
+        cls,
+        current_price: float,
+        projected_target: float,
+        base_atr_1h: float,
+        direction: str,
+        session_info: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """
+        Menghasilkan 36 titik proyeksi 5-menit ke depan (180 menit) dengan corong volatilitas.
+        """
+        now_ts = int(time.time())
+        points = []
+        p0 = current_price
+        p_target = projected_target
+        delta = p_target - p0
+        vol_base = max(base_atr_1h * 0.45, p0 * 0.003)
+
+        for i in range(1, 37):
+            minutes_ahead = i * 5
+            t_future = now_ts + (i * 300)
+            tau = i / 36.0
+
+            # Cubic smoothstep trajectory: 3*tau^2 - 2*tau^3
+            s_curve = (3.0 * (tau ** 2)) - (2.0 * (tau ** 3))
+            p_step = p0 + (delta * s_curve)
+
+            # Corong volatilitas melebar proporsional terhadap sqrt(tau)
+            sigma_step = vol_base * np.sqrt(tau) * 1.645
+            upper = p_step + sigma_step
+            lower = p_step - sigma_step
+
+            dt_wib = datetime.fromtimestamp(t_future, timezone.utc) + timedelta(hours=7)
+            points.append({
+                "step": i,
+                "minutes_ahead": minutes_ahead,
+                "timestamp": t_future,
+                "time_label": dt_wib.strftime("%H:%M"),
+                "projected_price": round(float(p_step), 2 if float(p_step) >= 10 else 4),
+                "upper_band": round(float(upper), 2 if float(upper) >= 10 else 4),
+                "lower_band": round(float(lower), 2 if float(lower) >= 10 else 4),
+                "spread_percent": round(float((upper - lower) / p_step * 100), 2),
+                "is_future": True
+            })
+        return points
+
+
     @classmethod
     async def fetch_7d_hourly_bars(cls, db: Session, asset: Asset) -> List[Dict[str, Any]]:
         """
@@ -286,13 +484,25 @@ class ThreeHourPredictionEngine:
 
         current_price = bars[-1]["close"]
         now_utc = datetime.now(timezone.utc)
-        target_time_utc = now_utc + timedelta(hours=3)
 
-        # 1. Ambil berita harian dari scraping massal
+        # 1. Deteksi status sesi perdagangan bursa (Kripto 24/7 vs Saham IDX Buka/Tutup)
+        session_info = cls.determine_market_session(asset)
+        target_time_utc_str = session_info["target_time_utc"]
+
+        # 2. Ambil berita harian dari scraping massal dengan fallback cerdas
         recent_news = ScraperService.get_recent_news_for_asset(db, symbol, limit=10)
-        avg_sentiment = float(np.mean([n["sentiment_score"] for n in recent_news])) if recent_news else 0.0
+        news_source_type = "EMITEN_LANGSUNG"
 
-        # 2. Cek apakah model 3 jam sudah terlatih atau perlu auto-train
+        if len(recent_news) < 2:
+            fallback_sym = "^JKSE" if (symbol.endswith(".JK") or symbol == "^JKSE") else "BTC/USDT"
+            macro_news = ScraperService.get_recent_news_for_asset(db, fallback_sym, limit=10)
+            if macro_news:
+                recent_news = macro_news
+                news_source_type = "MAKRO_IHSG_FALLBACK" if fallback_sym == "^JKSE" else "MAKRO_KRIPTO_FALLBACK"
+
+        avg_sentiment = float(np.mean([float(n["sentiment_score"]) for n in recent_news])) if recent_news else 0.0
+
+        # 3. Cek apakah model 3 jam sudah terlatih atau perlu auto-train
         model_path = os.path.join(MODELS_DIR, f"{slug}_3h_model.joblib")
         if not os.path.exists(model_path):
             try:
@@ -432,6 +642,16 @@ class ThreeHourPredictionEngine:
 
         backtest_acc = round((correct_count / total_eval * 100), 1) if total_eval > 0 else 60.0
 
+        # 5. Bangun 36 bar historis 5-menit dan 36 titik trayektori proyeksi 5-menit (Corong Volatilitas)
+        historical_5m = await cls.fetch_or_synthesize_5m_history(asset, current_price, bars)
+        trajectory_5m_points = cls.generate_5m_trajectory(
+            current_price=current_price,
+            projected_target=projected_target,
+            base_atr_1h=atr1_val,
+            direction=direction,
+            session_info=session_info
+        )
+
         pred_dict = {
             "direction": direction,
             "label": "BULLISH (UP 3-HOURS)" if direction == "NAIK" else "BEARISH (DOWN 3-HOURS)",
@@ -458,6 +678,8 @@ class ThreeHourPredictionEngine:
             "average_sentiment_score": round(avg_sentiment, 3),
             "label": "BULLISH" if avg_sentiment > 0.05 else "BEARISH" if avg_sentiment < -0.05 else "NEUTRAL",
             "sentiment_label": "BULLISH" if avg_sentiment > 0.05 else "BEARISH" if avg_sentiment < -0.05 else "NEUTRAL",
+            "source_type": news_source_type,
+            "source_description": "Sentimen Langsung Emiten" if news_source_type == "EMITEN_LANGSUNG" else "Sentimen Pasar & Makro Sektoral (Fallback)",
             "recent_headlines": recent_news[:5],
             "sample_headlines": [n["title"] for n in recent_news[:5]]
         }
@@ -467,8 +689,10 @@ class ThreeHourPredictionEngine:
             "symbol": symbol,
             "target_horizon": "3 JAM KE DEPAN",
             "generated_at": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "target_time_utc": target_time_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "target_time": target_time_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "target_time_utc": target_time_utc_str,
+            "target_time_wib": session_info["target_time_wib"],
+            "target_time": session_info["target_time_wib"],
+            "market_session": session_info,
             "current_price": current_price,
             "projected_target_price": projected_target,
             "upper_bound_target": upper_target,
@@ -479,6 +703,12 @@ class ThreeHourPredictionEngine:
             "target_price": target_dict,
             "daily_news_sentiment": news_dict,
             "scraped_news_summary": news_dict,
+            "trajectory_5m": {
+                "interval": "5m",
+                "total_future_points": len(trajectory_5m_points),
+                "historical_points": historical_5m,
+                "future_points": trajectory_5m_points
+            },
             "micro_signals": micro_signals,
             "backtest_7d_accuracy": {
                 "evaluated_bars": total_eval,
