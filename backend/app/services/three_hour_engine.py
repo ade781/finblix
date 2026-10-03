@@ -138,17 +138,22 @@ class ThreeHourPredictionEngine:
         if asset.asset_type == "crypto" or "/" in asset.symbol:
             try:
                 live_5m = await CryptoService.fetch_binance_bars(asset.symbol, timeframe="5m", limit=36)
+                # Validasi: Bar live 5m harus benar-benar terjadi dalam 1 jam terakhir dan harganya selaras dengan current_price
                 if live_5m and len(live_5m) >= 15:
-                    for b in live_5m:
-                        dt = datetime.fromtimestamp(b["time"], timezone.utc) + timedelta(hours=7)
-                        p = float(b["close"])
-                        points.append({
-                            "timestamp": b["time"],
-                            "time_label": dt.strftime("%H:%M"),
-                            "price": round(p, 2 if p >= 10 else 4),
-                            "is_historical": True
-                        })
-                    return points
+                    last_bar = live_5m[-1]
+                    is_time_fresh = (now_ts - last_bar["time"]) < 7200
+                    is_price_aligned = abs(float(last_bar["close"]) - current_price) / current_price < 0.03
+                    if is_time_fresh and is_price_aligned:
+                        for b in live_5m:
+                            dt = datetime.fromtimestamp(b["time"], timezone.utc) + timedelta(hours=7)
+                            p = float(b["close"])
+                            points.append({
+                                "timestamp": b["time"],
+                                "time_label": dt.strftime("%H:%M"),
+                                "price": round(p, 2 if p >= 10 else 4),
+                                "is_historical": True
+                            })
+                        return points
             except Exception as e:
                 print(f"[3HEngine] Live 5m fetch warning: {e}")
 
@@ -158,14 +163,20 @@ class ThreeHourPredictionEngine:
         if not anchor_prices:
             anchor_prices = [current_price]
 
-        p_start = anchor_prices[0]
+        # Batasi rentang deviasi historis 3 jam terakhir maksimal 1.2% agar skala Y tidak terdistorsi
+        raw_start = anchor_prices[0]
+        max_dev = current_price * 0.012
+        p_start = max(current_price - max_dev, min(current_price + max_dev, raw_start))
         p_end = current_price
+
         for i in range(36):
             step_back = 35 - i
             t_bar = now_ts - (step_back * 300)
             tau = i / 35.0 if 35.0 > 0 else 1.0
-            noise = np.sin(i * 0.7) * (current_price * 0.0008)
-            interp_p = p_start + (p_end - p_start) * tau + noise
+            
+            # Osilasi natural mikro historis (multi-frequency swing)
+            micro_swing = (np.sin(i * 0.55) * 0.6 + np.cos(i * 1.1) * 0.4) * (current_price * 0.0018)
+            interp_p = p_start + (p_end - p_start) * tau + micro_swing
             if i == 35:
                 interp_p = current_price
             dt = datetime.fromtimestamp(t_bar, timezone.utc) + timedelta(hours=7)
@@ -187,25 +198,39 @@ class ThreeHourPredictionEngine:
         session_info: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
         """
-        Menghasilkan 36 titik proyeksi 5-menit ke depan (180 menit) dengan corong volatilitas.
+        Menghasilkan 36 titik proyeksi 5-menit ke depan (180 menit) dengan osilasi
+        gelombang dinamis (Harmonic Swing Waves: impulse, pullback, retest, expansion)
+        yang konvergen presisi ke target proyeksi pada akhir jam ke-3.
         """
         now_ts = int(time.time())
         points = []
         p0 = current_price
         p_target = projected_target
         delta = p_target - p0
-        vol_base = max(base_atr_1h * 0.45, p0 * 0.003)
+        vol_base = max(base_atr_1h * 0.5, p0 * 0.004)
+        direction_factor = 1.0 if delta >= 0 else -1.0
 
         for i in range(1, 37):
             minutes_ahead = i * 5
             t_future = now_ts + (i * 300)
             tau = i / 36.0
 
-            # Cubic smoothstep trajectory: 3*tau^2 - 2*tau^3
+            # 1. Komponen Trend Drift Utama (Cubic Smoothstep)
             s_curve = (3.0 * (tau ** 2)) - (2.0 * (tau ** 3))
-            p_step = p0 + (delta * s_curve)
+            trend_drift = delta * s_curve
 
-            # Corong volatilitas melebar proporsional terhadap sqrt(tau)
+            # 2. Komponen Harmonic Swing Waves (Gelombang Tarik-Ulur Dinamis Pasar)
+            # Gelombang primer (siklus swing ~1.5 putaran dalam 3 jam)
+            wave_primary = direction_factor * np.sin(2.5 * np.pi * tau) * (vol_base * 0.70) * (1.0 - (tau ** 1.2))
+            # Gelombang sekunder (pullback / retest mikro intraday)
+            wave_secondary = direction_factor * np.sin(5.0 * np.pi * tau) * (vol_base * 0.35) * (1.0 - tau)
+
+            # Total harga berayun naik-turun dinamis namun teredam presisi ke target di tau=1
+            p_step = p0 + trend_drift + wave_primary + wave_secondary
+            if i == 36:
+                p_step = p_target
+
+            # 3. Corong volatilitas melebar proporsional terhadap sqrt(tau)
             sigma_step = vol_base * np.sqrt(tau) * 1.645
             upper = p_step + sigma_step
             lower = p_step - sigma_step

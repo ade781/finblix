@@ -38,8 +38,13 @@ export default function ThreeHourProjectionChart({
     if (currentPrice) prices.push(currentPrice);
     if (targetPrice) prices.push(targetPrice);
 
-    const min = prices.length ? Math.min(...prices) : 0;
-    const max = prices.length ? Math.max(...prices) : 100;
+    // Proteksi outlier: fokuskan skala sumbu Y pada dinamika rentang 3 jam lokal
+    const baseAnchor = currentPrice || (prices.length ? prices[prices.length - 1] : 100);
+    const validPrices = prices.filter(p => Math.abs(p - baseAnchor) / baseAnchor < 0.06);
+    const effectivePrices = validPrices.length >= 10 ? validPrices : prices;
+
+    const min = effectivePrices.length ? Math.min(...effectivePrices) : 0;
+    const max = effectivePrices.length ? Math.max(...effectivePrices) : 100;
     const padding = (max - min) * 0.08 || min * 0.01 || 1;
 
     return {
