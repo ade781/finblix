@@ -1,0 +1,11 @@
+{
+  "name": "finblix-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Finblix - Master Analytics & Trading Simulation Engine",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "preview": "npm --prefix frontend run preview"
+  }
+}
