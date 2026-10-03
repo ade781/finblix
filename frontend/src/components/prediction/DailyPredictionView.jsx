@@ -1,5 +1,13 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
+  FinblixLogo, 
+  IdxEmblemIcon, 
+  CryptoOrbitIcon, 
+  GlobalMarketIcon, 
+  BERTopicClusterIcon, 
+  MicrostructureWickIcon 
+} from '../icons/CustomIcons';
+import { 
   Compass, 
   TrendingUp, 
   TrendingDown, 
@@ -214,8 +222,8 @@ export default function DailyPredictionView({
         {/* Top Bar: Title, Market Categories Switcher & Refresh */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 border border-white/10 shrink-0">
-              <Compass className="w-5 h-5" />
+            <div className="relative shrink-0">
+              <FinblixLogo className="w-11 h-11" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
@@ -270,7 +278,7 @@ export default function DailyPredictionView({
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="flex items-center space-x-2 font-mono font-bold text-xs text-white">
-                <Building2 className={`w-4 h-4 ${activeMarket === 'idx' ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <IdxEmblemIcon className={`w-4 h-4 ${activeMarket === 'idx' ? 'text-emerald-400' : 'text-slate-400'}`} />
                 <span>SAHAM INDONESIA (IDX)</span>
               </span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
@@ -303,7 +311,7 @@ export default function DailyPredictionView({
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="flex items-center space-x-2 font-mono font-bold text-xs text-white">
-                <Coins className={`w-4 h-4 ${activeMarket === 'crypto' ? 'text-purple-400' : 'text-slate-400'}`} />
+                <CryptoOrbitIcon className={`w-4 h-4 ${activeMarket === 'crypto' ? 'text-purple-400' : 'text-slate-400'}`} />
                 <span>PASAR KRIPTO (CRYPTO)</span>
               </span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
@@ -336,7 +344,7 @@ export default function DailyPredictionView({
           >
             <div className="flex items-center justify-between mb-1.5">
               <span className="flex items-center space-x-2 font-mono font-bold text-xs text-white">
-                <Globe className={`w-4 h-4 ${activeMarket === 'us' ? 'text-blue-400' : 'text-slate-400'}`} />
+                <GlobalMarketIcon className={`w-4 h-4 ${activeMarket === 'us' ? 'text-blue-400' : 'text-slate-400'}`} />
                 <span>PASAR GLOBAL (WALL ST)</span>
               </span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono border ${
@@ -989,7 +997,7 @@ export default function DailyPredictionView({
                   <div className="pt-3 border-t border-slate-800/60 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-mono font-bold text-cyan-400 uppercase flex items-center space-x-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        <BERTopicClusterIcon className="w-4 h-4 text-cyan-400" />
                         <span>Klaster Narasi Finansial (BERTopic + c-TF-IDF):</span>
                       </span>
                       <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">

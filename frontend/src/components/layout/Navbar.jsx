@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import { 
+  FinblixLogo, 
+  IdxEmblemIcon, 
+  CryptoOrbitIcon, 
+  GlobalMarketIcon 
+} from '../icons/CustomIcons';
+import { 
   Compass, 
   Search, 
   TrendingUp, 
@@ -47,11 +53,11 @@ export default function Navbar({
         
         {/* Brand */}
         <div 
-          className="flex items-center space-x-3 cursor-pointer shrink-0" 
+          className="flex items-center space-x-3 cursor-pointer shrink-0 group" 
           onClick={() => setActiveTab('prediction')}
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25 border border-blue-400/30">
-            <Compass className="w-5 h-5 text-white" />
+          <div className="relative shrink-0">
+            <FinblixLogo className="w-9 h-9 transition-transform group-hover:scale-105 duration-200" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
@@ -97,7 +103,10 @@ export default function Navbar({
                   {idxResults.length > 0 && (
                     <div className="space-y-1">
                       <div className="px-3 py-1 text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider bg-emerald-950/30 rounded flex items-center justify-between">
-                        <span>Saham Indonesia (BEI / IDX)</span>
+                        <span className="flex items-center space-x-1.5">
+                          <IdxEmblemIcon className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Saham Indonesia (BEI / IDX)</span>
+                        </span>
                         <span className="text-[9px] text-emerald-500/80">BERTopic Engine</span>
                       </div>
                       {idxResults.map((t) => (
@@ -133,7 +142,10 @@ export default function Navbar({
                   {cryptoResults.length > 0 && (
                     <div className="space-y-1 pt-1">
                       <div className="px-3 py-1 text-[10px] font-mono font-bold text-purple-400 uppercase tracking-wider bg-purple-950/30 rounded flex items-center justify-between">
-                        <span>Pasar Kripto (Crypto 24/7)</span>
+                        <span className="flex items-center space-x-1.5">
+                          <CryptoOrbitIcon className="w-3.5 h-3.5 text-purple-400" />
+                          <span>Pasar Kripto (Crypto 24/7)</span>
+                        </span>
                         <span className="text-[9px] text-purple-500/80">Microstructure Engine</span>
                       </div>
                       {cryptoResults.map((t) => (
@@ -169,7 +181,10 @@ export default function Navbar({
                   {usResults.length > 0 && (
                     <div className="space-y-1 pt-1">
                       <div className="px-3 py-1 text-[10px] font-mono font-bold text-blue-400 uppercase tracking-wider bg-blue-950/30 rounded flex items-center justify-between">
-                        <span>Pasar Global (Wall Street)</span>
+                        <span className="flex items-center space-x-1.5">
+                          <GlobalMarketIcon className="w-3.5 h-3.5 text-blue-400" />
+                          <span>Pasar Global (Wall Street)</span>
+                        </span>
                         <span className="text-[9px] text-blue-500/80">US Equities</span>
                       </div>
                       {usResults.map((t) => (
