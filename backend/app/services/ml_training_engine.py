@@ -214,6 +214,34 @@ class MLTrainingEngine:
         vol_sma20 = vol.rolling(20).mean()
         df["volume_ratio"] = vol / (vol_sma20 + 1e-9)
 
+        # === FITUR REZIM PASAR & AKUMULASI INSTITUSIONAL ===
+        # 1. Choppiness Index (Mengukur fase tren vs konsolidasi)
+        atr_sum14 = tr.rolling(14).sum()
+        max_h14 = high.rolling(14).max()
+        min_l14 = low.rolling(14).min()
+        chop = 100 * np.log10(atr_sum14 / ((max_h14 - min_l14) + 1e-9)) / np.log10(14)
+        df["choppiness_index"] = chop / 100.0
+
+        # 2. Chaikin Money Flow (CMF 20 - Akumulasi Dana Institusi/Asing)
+        mfm = ((close - low) - (high - close)) / c_range
+        mfv = mfm * vol
+        df["cmf_20"] = mfv.rolling(20).sum() / (vol.rolling(20).sum() + 1e-9)
+
+        # 3. On-Balance Volume (OBV) Momentum Normalized
+        dir_sign = np.sign(close.diff()).fillna(0)
+        obv = (dir_sign * vol).cumsum()
+        df["obv_slope"] = obv.diff(5) / (vol_sma20 * 5 + 1e-9)
+
+        # 4. ADX 14 (Average Directional Index - Kekuatan Tren)
+        up_move = high.diff()
+        down_move = -low.diff()
+        plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
+        minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
+        plus_di = 100 * pd.Series(plus_dm, index=df.index).rolling(14).mean() / (atr14 + 1e-9)
+        minus_di = 100 * pd.Series(minus_dm, index=df.index).rolling(14).mean() / (atr14 + 1e-9)
+        dx = 100 * (plus_di - minus_di).abs() / ((plus_di + minus_di) + 1e-9)
+        df["adx_14"] = dx.rolling(14).mean() / 100.0
+
         # 2. Fundamental & Scraped Sentiment Integration (NO DATA LEAKAGE)
         df["fng_val"] = df["date_str"].map(fng_map).fillna(50.0) / 100.0
         df["fng_delta"] = df["fng_val"].diff(7).fillna(0.0)
@@ -240,6 +268,7 @@ class MLTrainingEngine:
             "price_to_weekly_ema", "ema9_slope",
             "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
+            "choppiness_index", "cmf_20", "obv_slope", "adx_14",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
             "day_of_week"
         ]
@@ -289,7 +318,7 @@ class MLTrainingEngine:
         # 3. Ambil data sentimen berita hasil scraping riil dari database
         news_sentiment_map = ScraperService.get_date_sentiment_map(db, symbol)
 
-        # 4. Rekayasa Fitur Kuantitatif & Sentimen (26 Fitur Komprehensif)
+        # 4. Rekayasa Fitur Kuantitatif & Sentimen (30 Fitur Komprehensif Multi-Rezim)
         dataset = cls.build_feature_dataset(bars, fng_map, news_sentiment_map, is_training=True)
         
         feature_cols = [
@@ -299,6 +328,7 @@ class MLTrainingEngine:
             "price_to_weekly_ema", "ema9_slope",
             "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
+            "choppiness_index", "cmf_20", "obv_slope", "adx_14",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
             "day_of_week"
         ]

@@ -1,52 +1,52 @@
 {
   "symbol": "BBRI.JK",
-  "trained_at": "2026-10-03 18:05:09 UTC",
+  "trained_at": "2026-10-03 18:19:46 UTC",
   "dataset_bars": 719,
   "samples_trained": 550,
   "samples_tested": 138,
-  "training_duration_seconds": 2.35,
+  "training_duration_seconds": 2.93,
   "metrics": {
-    "train_accuracy_pct": 92.18,
-    "cv_5fold_mean_pct": 50.55,
-    "cv_5fold_std_pct": 4.61,
-    "test_accuracy_pct": 52.9,
-    "precision_pct": 44.83,
-    "recall_pct": 44.07,
-    "f1_score_pct": 44.44,
-    "roc_auc_pct": 51.36
+    "train_accuracy_pct": 94.0,
+    "cv_5fold_mean_pct": 52.75,
+    "cv_5fold_std_pct": 4.45,
+    "test_accuracy_pct": 49.28,
+    "precision_pct": 40.0,
+    "recall_pct": 37.29,
+    "f1_score_pct": 38.6,
+    "roc_auc_pct": 49.54
   },
   "top_features": [
     {
-      "feature": "fng_delta",
-      "importance": 5.96
-    },
-    {
       "feature": "news_sentiment_7d",
-      "importance": 5.42
+      "importance": 4.9
     },
     {
       "feature": "lower_wick",
-      "importance": 5.35
+      "importance": 4.59
     },
     {
-      "feature": "body_ratio",
-      "importance": 5.09
+      "feature": "fng_delta",
+      "importance": 4.44
     },
     {
       "feature": "ret_1d",
-      "importance": 4.57
+      "importance": 4.28
     },
     {
-      "feature": "ret_30d",
-      "importance": 4.46
+      "feature": "cmf_20",
+      "importance": 4.23
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 3.93
     },
     {
       "feature": "macd_hist",
-      "importance": 4.2
+      "importance": 3.78
     },
     {
-      "feature": "ret_3d",
-      "importance": 4.16
+      "feature": "upper_wick",
+      "importance": 3.63
     }
   ],
   "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",

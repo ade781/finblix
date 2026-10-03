@@ -255,8 +255,36 @@ class DailyPredictionEngine:
         lower_b = float((sma20 - (std20 * 2)).iloc[-1])
         percent_b = float((p_close - lower_b) / ((upper_b - lower_b) + 1e-9))
 
+        # Choppiness Index (14) & Chaikin Money Flow (CMF 20)
+        tr1 = h - l
+        tr2 = (h - c.shift()).abs()
+        tr3 = (l - c.shift()).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        atr_sum14 = float(tr.rolling(min(len(c), 14)).sum().iloc[-1])
+        max_h14 = float(h.rolling(min(len(c), 14)).max().iloc[-1])
+        min_l14 = float(l.rolling(min(len(c), 14)).min().iloc[-1])
+        chop = float(100.0 * np.log10(atr_sum14 / ((max_h14 - min_l14) + 1e-9)) / np.log10(14)) if (max_h14 - min_l14) > 0 else 50.0
+
+        mfm = ((c - l) - (h - c)) / (h - l + 1e-9)
+        cmf_window = min(len(c), 20)
+        cmf_20 = float((mfm * v).rolling(cmf_window).sum().iloc[-1] / (v.rolling(cmf_window).sum().iloc[-1] + 1e-9))
+
         score = 0.0
         tech_reasons = []
+
+        # Chaikin Money Flow Institutional Inflow/Outflow Confirmation
+        if cmf_20 > 0.05:
+            score += 15.0
+            tech_reasons.append(f"Chaikin Money Flow (CMF {cmf_20:+.2f}): Arus likuiditas mengonfirmasi akumulasi bersih institusi.")
+        elif cmf_20 < -0.05:
+            score -= 15.0
+            tech_reasons.append(f"Chaikin Money Flow (CMF {cmf_20:+.2f}): Arus likuiditas mengonfirmasi distribusi keluar institusi.")
+
+        # Choppiness Regime Dynamic Context
+        if chop > 61.8:
+            tech_reasons.append(f"Choppiness Index ({chop:.1f}): Rezim konsolidasi ketat (sideways range-bound).")
+        elif chop < 38.2:
+            tech_reasons.append(f"Choppiness Index ({chop:.1f}): Rezim ekspansi tren terarah kuat.")
 
         # 1. Multi-Timeframe Weekly Trend Alignment (20-week EMA proxy: 100 bars for equities)
         w_span = min(len(c), 100)

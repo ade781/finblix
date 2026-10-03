@@ -1,52 +1,52 @@
 {
   "symbol": "TLKM.JK",
-  "trained_at": "2026-10-03 18:05:13 UTC",
+  "trained_at": "2026-10-03 18:19:52 UTC",
   "dataset_bars": 719,
   "samples_trained": 550,
   "samples_tested": 138,
-  "training_duration_seconds": 2.27,
+  "training_duration_seconds": 2.83,
   "metrics": {
-    "train_accuracy_pct": 95.09,
-    "cv_5fold_mean_pct": 49.23,
-    "cv_5fold_std_pct": 4.42,
-    "test_accuracy_pct": 52.17,
-    "precision_pct": 38.1,
-    "recall_pct": 28.57,
-    "f1_score_pct": 32.65,
-    "roc_auc_pct": 53.11
+    "train_accuracy_pct": 94.91,
+    "cv_5fold_mean_pct": 49.45,
+    "cv_5fold_std_pct": 4.23,
+    "test_accuracy_pct": 59.42,
+    "precision_pct": 50.0,
+    "recall_pct": 46.43,
+    "f1_score_pct": 48.15,
+    "roc_auc_pct": 58.45
   },
   "top_features": [
     {
+      "feature": "cmf_20",
+      "importance": 6.05
+    },
+    {
+      "feature": "obv_slope",
+      "importance": 5.74
+    },
+    {
       "feature": "ret_7d",
-      "importance": 6.12
+      "importance": 4.99
     },
     {
       "feature": "macd_hist",
-      "importance": 5.53
+      "importance": 4.61
     },
     {
-      "feature": "lower_wick",
-      "importance": 5.11
-    },
-    {
-      "feature": "volume_ratio",
-      "importance": 4.82
+      "feature": "price_to_ema20",
+      "importance": 3.9
     },
     {
       "feature": "rsi_delta",
-      "importance": 4.46
+      "importance": 3.87
     },
     {
-      "feature": "price_to_weekly_ema",
-      "importance": 4.16
+      "feature": "lower_wick",
+      "importance": 3.7
     },
     {
       "feature": "ret_1d",
-      "importance": 4.14
-    },
-    {
-      "feature": "upper_wick",
-      "importance": 3.95
+      "importance": 3.43
     }
   ],
   "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",

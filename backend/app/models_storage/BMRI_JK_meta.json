@@ -1,52 +1,52 @@
 {
   "symbol": "BMRI.JK",
-  "trained_at": "2026-10-03 18:05:11 UTC",
+  "trained_at": "2026-10-03 18:19:49 UTC",
   "dataset_bars": 719,
   "samples_trained": 550,
   "samples_tested": 138,
-  "training_duration_seconds": 2.28,
+  "training_duration_seconds": 2.41,
   "metrics": {
-    "train_accuracy_pct": 88.73,
-    "cv_5fold_mean_pct": 53.19,
-    "cv_5fold_std_pct": 7.82,
-    "test_accuracy_pct": 60.87,
-    "precision_pct": 48.57,
-    "recall_pct": 32.08,
-    "f1_score_pct": 38.64,
-    "roc_auc_pct": 54.41
+    "train_accuracy_pct": 91.27,
+    "cv_5fold_mean_pct": 52.31,
+    "cv_5fold_std_pct": 7.76,
+    "test_accuracy_pct": 52.9,
+    "precision_pct": 37.5,
+    "recall_pct": 33.96,
+    "f1_score_pct": 35.64,
+    "roc_auc_pct": 49.12
   },
   "top_features": [
     {
-      "feature": "news_sentiment_7d",
-      "importance": 5.34
+      "feature": "news_sentiment",
+      "importance": 4.63
     },
     {
       "feature": "fng_val",
-      "importance": 5.23
+      "importance": 4.63
     },
     {
-      "feature": "price_to_ema20",
-      "importance": 4.8
-    },
-    {
-      "feature": "news_sentiment",
-      "importance": 4.74
-    },
-    {
-      "feature": "body_ratio",
-      "importance": 4.67
-    },
-    {
-      "feature": "ret_7d",
-      "importance": 4.59
+      "feature": "news_sentiment_7d",
+      "importance": 4.34
     },
     {
       "feature": "fng_delta",
-      "importance": 4.43
+      "importance": 4.24
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 4.04
     },
     {
       "feature": "ret_1d",
-      "importance": 4.25
+      "importance": 4.03
+    },
+    {
+      "feature": "rsi_14",
+      "importance": 3.99
+    },
+    {
+      "feature": "adx_14",
+      "importance": 3.82
     }
   ],
   "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",
