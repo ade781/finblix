@@ -1,0 +1,420 @@
+================================================================================
+                    FINBLIX - MASTER DEVELOPMENT BLUEPRINT
+         PLATFORM PREDIKSI HARIAN FINANSIAL HIBRIDA (EOD FORECAST)
+    Perpaduan 60% Analisis Teknikal Kuantitatif & 40% Fundamental Sentimen Berita
+        dengan Validasi Akurasi Historis Day-by-Day 30 Hari Transparan
+================================================================================
+Dokumen      : MASTER_PLAN_AND_ARCHITECTURE
+Versi        : 4.1.0 (1-Year AI Model Training & Historical Scraping Edition)
+Tanggal Buat : 2026-10-03
+Status       : Single Source of Truth (Rencana Induk Tunggal & Final)
+Nama Projek  : FINBLIX (Financial Predictive Intelligence)
+Penyusun     : Lead System Architect, Quantitative Engineer & Security Specialist
+================================================================================
+
+
+DAFTAR ISI LENGKAP:
+--------------------------------------------------------------------------------
+BAGIAN 1 : IDENTITAS & FILOSOFI UTAMA PROJEK (PREDICTION-FIRST PLATFORM)
+BAGIAN 2 : ARSITEKTUR MESIN PREDIKSI HARIAN HIBRIDA (60% TEKNIKAL + 40% SENTIMEN)
+BAGIAN 3 : SISTEM BENCHMARK & AUDIT AKURASI HISTORIS 30 HARI DAY-BY-DAY
+BAGIAN 4 : KATALOG FITUR LENGKAP & CORE USER WORKFLOW
+BAGIAN 5 : ARSITEKTUR TEKNOLOGI SISTEM MENYELURUH (TECH STACK SPECIFICATION)
+BAGIAN 6 : DESAIN DATABASE MYSQL XAMPP (SCHEMA & DDL SCRIPT 'finblix')
+BAGIAN 7 : STRUKTUR DIREKTORI & REPOSITORI PROJEK
+BAGIAN 8 : SPESIFIKASI ENDPOINT REST API & KONTRAK DATA JSON
+BAGIAN 9 : DESAIN SISTEM UI/UX DASHBOARD UTAMA PREDIKSI
+BAGIAN 10: MODUL SCRAPING BERITA & SENTIMENT NLP ENGINE
+BAGIAN 11: STANDAR PENGUJIAN, BENCHMARKING & JAMINAN KUALITAS (QA)
+BAGIAN 12: KEAMANAN, PRIVASI & PANDUAN DEPLOYMENT RUNTIME
+================================================================================
+
+
+================================================================================
+BAGIAN 1: IDENTITAS & FILOSOFI UTAMA PROJEK (PREDICTION-FIRST PLATFORM)
+================================================================================
+
+1.1. Pernyataan Misi & Visi Projek
+Finblix adalah platform riset finansial intelijen yang dibangun dengan satu fokus
+sentral: MEMBERIKAN PREDIKSI ARAH HARIAN (NAIK / TURUN) SECARA AKURAT, RASIONAL,
+DAN TERUKUR UNTUK HARI BERIKUTNYA (NEXT-DAY END-OF-DAY FORECAST).
+
+Finblix membuang seluruh fitur sekunder yang tidak relevan (seperti simulasi broker
+bermain-main, kalkulator pensiun umum, dsb.) dan memusatkan seluruh daya komputasi
+serta antarmuka pada Cockpit Prediksi Pasar:
+1. Multi-Aset Terpadu: Kripto global (BTC, ETH, SOL via Binance) serta Saham Global
+   dan Bursa Efek Indonesia (BBCA, BBRI, AAPL, NVDA via yfinance).
+2. Perpaduan Kuantitatif & Narasi: Menggabungkan kekuatan momentum teknikal (60%)
+   dengan sentimen berita aktual hasil web scraping dan indeks ketakutan pasar (40%).
+3. Transparansi Mutlak (No Black-Box Promises): Setiap prediksi disertai dengan
+   skor keyakinan (Confidence %), estimasi rentang harga (ATR 14), dan rekam jejak
+   audit historis 30 hari perdagangan terakhir yang diuji per-hari secara jujur.
+
+1.2. Dashboard Utama Adalah Dashboard Prediksi
+Saat pengguna membuka Finblix, pengguna langsung disajikan DASHBOARD PREDIKSI HARIAN:
+- Hero Prediction Banner: Status arah (NAIK 🚀 / TURUN 🔻), keyakinan model, target harga.
+- Interactive Candlestick Chart: Grafik candlestick real-time dengan overlay EMA & target range.
+- Indicator Subchart: RSI 14, MACD, dan dinamika volume transaksi.
+- Analisis Faktor Penggerak (Key Drivers): Poin-poin rasional teknikal & narasi fundamental.
+- Audit Akurasi Historis 30 Hari: Tabel rekam jejak per hari lengkap dengan status BENAR / SALAH.
+
+
+================================================================================
+BAGIAN 2: ARSITEKTUR MESIN PREDIKSI HARIAN HIBRIDA (60% TEKNIKAL + 40% SENTIMEN)
+================================================================================
+
+2.1. Formula Kuantitatif Hybrid Daily Prediction
+Pergerakan harga akhir hari diprediksi menggunakan perpaduan bobot:
+Score_Hybrid = (0.60 * Score_Teknikal) + (0.40 * Score_Fundamental)
+
+Rentang Skor: [-100.0, +100.0]
+
+A. Analisis Teknikal (Bobot 60%):
+   1. Hubungan Harga terhadap EMA 20 (Bobot +/- 25 poin):
+      - Close > EMA 20  -> +25 poin (Momentum tren jangka pendek positif)
+      - Close <= EMA 20 -> -25 poin (Momentum tren jangka pendek negatif)
+   2. Struktur Golden / Death Alignment EMA 20 vs EMA 50 (Bobot +/- 20 poin):
+      - EMA 20 > EMA 50  -> +20 poin (Struktur tren naik terkonfirmasi)
+      - EMA 20 <= EMA 50 -> -20 poin (Struktur tren turun terkonfirmasi)
+   3. Osilator Momentum RSI 14 (Bobot +/- 35 poin):
+      - RSI < 35: +35 poin (Jenuh jual / Oversold, potensi technical rebound tinggi)
+      - RSI > 65: -35 poin (Jenuh beli / Overbought, risiko koreksi tajam)
+      - 48 <= RSI <= 52: 0 poin (Netral seimbang)
+      - RSI > 52: +15 poin (Momentum beli dominan)
+      - RSI < 48: -15 poin (Momentum jual dominan)
+   4. MACD Histogram (Bobot +/- 20 poin):
+      - Histogram > 0  -> +20 poin (Akselerasi tren beli berlanjut)
+      - Histogram <= 0 -> -20 poin (Akselerasi tren jual berlanjut)
+   Total Skor Teknikal dikompresi ke rentang [-100, +100].
+
+B. Analisis Fundamental & Sentimen Berita Scraping (Bobot 40%):
+   1. Skor Polaritas NLP Berita Finansial (Bobot +/- 65 poin):
+      - Rata-rata polaritas sentimen berita terkini (VADER + Financial Lexicon).
+      - Rentang: -1.0 (sangat negatif) s/d +1.0 (sangat positif).
+      - Kontribusi = Polarity_Score * 65.
+   2. Indeks Ketakutan & Keserakahan Pasar (Fear & Greed Index) (Bobot +/- 25 poin):
+      - Menggunakan prinsip contrarian:
+        * Nilai < 25 (Extreme Fear): Akumulasi beli pasar tertekan (+25 poin).
+        * Nilai > 75 (Extreme Greed): Risiko aksi ambil untung berlebihan (-25 poin).
+        * Nilai 25 - 75: Dihitung proporsional linier.
+   Total Skor Fundamental dikompresi ke rentang [-100, +100].
+
+2.2. Penentuan Klasifikasi Arah Akhir Hari (EOD Forecast)
+- Jika Score_Hybrid > +5.0  -> NAIK (Bullish 🚀)
+- Jika Score_Hybrid < -5.0  -> TURUN (Bearish 🔻)
+- Jika -5.0 <= Score_Hybrid <= +5.0 -> NETRAL (Konsolidasi ⚖️)
+
+2.3. Formula Tingkat Keyakinan (Confidence Score %)
+Confidence = MIN(92.0, MAX(55.0, 55.0 + (|Score_Hybrid| * 0.38)))
+Menghasilkan angka keyakinan antara 55.0% hingga 92.0%, mencerminkan probabilitas
+riil tanpa klaim 100% palsu.
+
+2.4. Estimasi Rentang Target Harga (ATR 14 Volatility Band)
+Berdasarkan Average True Range (ATR 14 hari perdagangan):
+- Jika Prediksi NAIK : Target High = Close + (0.75 * ATR), Target Low = Close - (0.25 * ATR)
+- Jika Prediksi TURUN: Target High = Close + (0.25 * ATR), Target Low = Close - (0.75 * ATR)
+
+2.5. Mesin Pelatihan AI 1 Tahun (1-Year Machine Learning Training Engine):
+- Dataset Pelatihan: Mengambil penuh 365 hari data candlestick historis (Binance CCXT & yfinance)
+  dan 365 hari data sentimen berita hasil web scraping serta Fear & Greed index.
+- Rekayasa 19 Fitur Kuantitatif & Sentimen:
+  * Multi-horizon returns (1d, 3d, 7d, 14d, 30d).
+  * Trend ratios: Price/EMA20, Price/EMA50, EMA20/EMA50 crossover spread.
+  * Osilator momentum: RSI 14, RSI delta 3 hari, MACD normalized histogram.
+  * Volatilitas & volume: Bollinger Bands %B & bandwidth, ATR 14 ternormalisasi, volume ratio SMA 20.
+  * Sentimen fundamental: Skor polaritas berita harian, rolling 7-day sentiment EMA, Fear & Greed val & delta.
+- Arsitektur Model:
+  * Ensemble Soft Voting Classifier memadukan Random Forest (300 Pohon) dan Gradient Boosting (250 Stages).
+  * 5-Fold TimeSeriesSplit Cross-Validation (validasi berurutan walk-forward tanpa data leakage).
+  * Waktu komputasi nyata intensif (~12 - 20 detik per aset) untuk mencari batas keputusan optimal.
+  * Penyimpanan bobot model secara persisten ke dalam format joblib di ackend/app/models_storage/.
+
+
+================================================================================
+BAGIAN 3: SISTEM BENCHMARK & AUDIT AKURASI HISTORIS 30 HARI DAY-BY-DAY
+================================================================================
+
+3.1. Metodologi Walk-Forward Day-by-Day Backtest
+Untuk menjamin transparansi dan membuktikan keandalan sistem kepada pengguna:
+1. Sistem mengambil 30 candle bar harian (1d) terakhir untuk aset yang dipilih.
+2. Pada setiap hari t (mulai dari 30 hari yang lalu hingga kemarin):
+   - Sistem menghitung sinyal kuantitatif untuk memprediksi arah hari t+1.
+   - Sinyal dibandingkan langsung dengan realisasi harga penutupan aktual Close[t+1] vs Close[t].
+3. Klasifikasi Hasil Audit:
+   - BENAR : Arah prediksi (NAIK/TURUN) sesuai dengan pergerakan harga aktual.
+   - SALAH : Arah prediksi berlawanan dengan pergerakan harga aktual.
+   - NETRAL: Selisih harga absolut < 0.05% (flat market, tidak dipenalti).
+
+3.2. Metrik Akurasi Terukur
+- Akurasi Keseluruhan (%) = (Total Hari Benar / Total Hari Dievaluasi) * 100%
+- Rasio Hari Benar vs Hari Salah (misal: 22 Benar / 30 Hari)
+- Tabel Rekam Jejak 30 Hari Transparan: Tanggal, Harga Close, Arah Prediksi,
+  Pergerakan Aktual, Perubahan (%), dan Badge Status Audit (BENAR / SALAH).
+
+
+================================================================================
+BAGIAN 4: KATALOG FITUR LENGKAP & CORE USER WORKFLOW
+================================================================================
+
+4.1. Tiga Pilar Menu Utama yang Terfokus:
+1. 🎯 Dashboard Prediksi (Main / Default Screen):
+   - Cockpit terpadu prediksi harian untuk aset terpilih.
+   - Dilengkapi pemilih aset instan, kartu KPI prediksi, chart candlestick interaktif,
+     indikator teknikal, breakdown skor hibrida, poin pemicu pasar, dan tabel audit akurasi.
+2. 📋 Screener Prediksi Pasar (Market Prediction Watchlist):
+   - Pemindai seluruh aset (Kripto, Saham IHSG, Saham Wall Street).
+   - Menampilkan harga terkini, perubahan 24 jam, status prediksi hari ini, tingkat
+     keyakinan, dan akurasi 30 hari.
+   - Klik satu kali pada baris aset langsung membuka Dashboard Prediksi untuk aset tersebut.
+3. 📰 Sentimen & Berita Pasar (Scraped News & Sentiment Scanner):
+   - Pemantau berita finansial hasil web scraping otomatis.
+   - Setiap berita dianalisis dengan NLP VADER untuk menghasilkan skor polaritas dan
+     estimasi dampak aset yang menjadi bahan bakar mesin prediksi fundamental.
+
+
+================================================================================
+BAGIAN 5: ARSITEKTUR TEKNOLOGI SISTEM MENYELURUH (TECH STACK SPECIFICATION)
+================================================================================
+
+5.1. Backend Engine:
+- Bahasa        : Python 3.11+
+- Framework     : FastAPI (Asynchronous high-performance REST API)
+- Analisis Data : NumPy, Pandas, SciPy, NLTK VADER
+- Market Data   : CCXT (Binance Kripto), yfinance (Saham IHSG & Saham US)
+- Web Scraping  : BeautifulSoup4, httpx, Requests, RSS Feed Scrapers
+- Database ORM  : SQLAlchemy 2.0 + PyMySQL
+
+5.2. Database:
+- Sistem        : MySQL pada XAMPP (Port 3306)
+- Nama Database : finblix (Strictly `finblix`)
+- Fitur         : Indexing symbol, timeframe, timestamp, foreign keys, utf8mb4.
+
+5.3. Frontend Client:
+- Framework     : React 18 + Vite
+- Styling       : Tailwind CSS v3 + Curated Finblix Slate/Indigo Palette
+- Visualisasi   : TradingView Lightweight Charts (Candlestick & Volume)
+- Ikonografi    : Lucide React Icons
+- HTTP Client   : Axios terintegrasi dengan Vite proxy `/api` ke `localhost:8000`
+
+
+================================================================================
+BAGIAN 6: DESAIN DATABASE MYSQL XAMPP (SCHEMA & DDL SCRIPT 'finblix')
+================================================================================
+
+Tabel Inti Database `finblix`:
+1. `assets`              : Menyimpan master data instrumen (BTC/USDT, BBCA.JK, AAPL, dll).
+2. `market_bars`         : Cache candlestick OHLCV historis.
+3. `daily_predictions`   : Menyimpan riwayat log prediksi harian (arah, confidence, target, skor).
+4. `accuracy_logs`       : Catatan evaluasi akurasi historis per-hari dan status audit (BENAR/SALAH).
+5. `news_articles`       : Artikel berita hasil scraping beserta skor sentimen polaritas NLP.
+6. `market_sentiment`    : Log data agregat sentimen dan Fear & Greed index harian.
+7. `anomaly_alerts`      : Log peringatan lonjakan volume (>300%) dan anomali harga.
+
+
+================================================================================
+BAGIAN 7: STRUKTUR DIREKTORI & REPOSITORI PROJEK
+================================================================================
+
+```
+finblix/
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── deps.py
+│   │   │   └── v1/
+│   │   │       ├── __init__.py
+│   │   │       ├── market.py
+│   │   │       ├── prediction.py      <-- Endpoint Prediksi Harian & Akurasi
+│   │   │       ├── news.py
+│   │   │       └── alerts.py
+│   │   ├── core/
+│   │   │   ├── config.py
+│   │   │   └── database.py
+│   │   ├── models/                    <-- SQLAlchemy ORM Entities
+│   │   └── services/
+│   │       ├── prediction_engine.py   <-- Mesin Prediksi 60% TA + 40% News
+│   │       ├── ta_engine.py           <-- Hitungan EMA, RSI, MACD, BB, ATR
+│   │       ├── crypto_service.py      <-- CCXT Binance
+│   │       ├── stock_service.py       <-- yfinance IDX & US
+│   │       ├── scraper_service.py     <-- Web Scraping Berita Finansial
+│   │       └── sentiment_engine.py    <-- VADER NLP Sentiment Analysis
+│   ├── main.py
+│   └── requirements.txt
+├── database/
+│   └── schema.sql                     <-- Skrip MySQL XAMPP
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   └── Navbar.jsx         <-- Navigasi ramping & terfokus
+│   │   │   ├── prediction/
+│   │   │   │   └── DailyPredictionView.jsx <-- DASHBOARD UTAMA
+│   │   │   ├── chart/
+│   │   │   │   ├── CandlestickChart.jsx
+│   │   │   │   ├── ChartToolbar.jsx
+│   │   │   │   └── IndicatorSubChart.jsx
+│   │   │   ├── screener/
+│   │   │   │   └── ScreenerTable.jsx
+│   │   │   └── news/
+│   │   │       └── NewsView.jsx
+│   │   ├── api.js
+│   │   ├── App.jsx                    <-- Default tab: 'prediction'
+│   │   └── index.css
+│   ├── package.json
+│   └── vite.config.js
+└── FINBLIX_DEVELOPMENT_PLAN.txt       <-- Dokumen Rencana Induk Tunggal
+```
+
+
+================================================================================
+BAGIAN 8: SPESIFIKASI ENDPOINT REST API & KONTRAK DATA JSON
+================================================================================
+
+8.1. Endpoint Prediksi Harian & Akurasi:
+`GET /api/v1/prediction/daily/{symbol:path}`
+Menerima simbol (contoh: `BTC/USDT` atau `BBCA.JK`).
+
+Respons JSON:
+```json
+{
+  "status": "success",
+  "data": {
+    "symbol": "BTC/USDT",
+    "current_price": 64850.0,
+    "target_date": "2026-10-04",
+    "prediction": {
+      "direction": "NAIK",
+      "label": "BULLISH",
+      "confidence_percent": 74.5,
+      "target_range": {
+        "estimated_high": 67200.0,
+        "estimated_low": 63920.0
+      },
+      "composite_score": 51.3,
+      "weights": {
+        "technical_weight": "60%",
+        "fundamental_weight": "40%"
+      },
+      "breakdown": {
+        "technical_score": 65.0,
+        "fundamental_score": 30.8,
+        "rsi_value": 54.2,
+        "news_sentiment_score": 0.47,
+        "fear_greed_index": 65
+      },
+      "key_drivers": {
+        "technical": [
+          "Harga berada di atas EMA 20 (Bullish)",
+          "Golden cross EMA 20 di atas EMA 50",
+          "MACD histogram menunjukkan momentum akselerasi positif"
+        ],
+        "fundamental": [
+          "Sentimen berita pasar dominan positif (+0.47)",
+          "Crypto Fear & Greed Index menunjukkan zona Netral-Greed"
+        ]
+      }
+    },
+    "accuracy_track_record": {
+      "days_evaluated": 30,
+      "correct_predictions": 22,
+      "incorrect_predictions": 8,
+      "accuracy_percentage": 73.3,
+      "verdict": "AKURASI TINGGI (HIGHLY RELIABLE)",
+      "daily_log": [
+        {
+          "date": "2026-10-03",
+          "price": 64850.0,
+          "predicted": "NAIK",
+          "actual": "NAIK",
+          "change_percent": 1.84,
+          "is_correct": true,
+          "status": "BENAR"
+        }
+      ]
+    }
+  }
+}
+```
+
+8.2. Endpoint Pendukung:
+- `GET /api/v1/market/tickers`                : Daftar seluruh aset terdaftar.
+- `GET /api/v1/market/history/{symbol}/{tf}`  : Candlestick bar OHLCV.
+- `GET /api/v1/market/indicators/{symbol}`    : Indikator kuantitatif lengkap.
+- `GET /api/v1/news/latest`                   : Berita finansial hasil scraping & sentimen.
+- `GET /api/v1/alerts/unread`                 : Peringatan anomali & spike volume.
+
+
+================================================================================
+BAGIAN 9: DESAIN SISTEM UI/UX DASHBOARD UTAMA PREDIKSI
+================================================================================
+
+9.1. Hirarki Visual & Tata Letak:
+1. Navbar Atas:
+   - Logo Finblix dengan badge `PREDICTION AI`.
+   - Pencarian instan aset dengan live preview harga & perubahan 24j.
+   - Tiga tombol tab utama: Dashboard Prediksi, Screener Prediksi, Sentimen Berita.
+   - Notifikasi bell anomali pasar.
+2. Top Bar Dashboard Prediksi:
+   - Pemilih aset dropdown interaktif.
+   - Tombol "Segarkan Prediksi" dengan status komputasi real-time.
+3. 4 Kartu KPI Prediksi Utama:
+   - Prediksi Arah Besok (NAIK 🚀 / TURUN 🔻).
+   - Tingkat Keyakinan Model (Gauge Bar %).
+   - Rentang Estimasi Target Harga (High & Low).
+   - Akurasi Historis 30 Hari (%) dan status reliabilitas.
+4. Main Grid:
+   - Kolom Kiri: Candlestick Chart interaktif dengan overlay EMA dan timeframes (1d, 4h, 1h),
+     serta Sub-chart RSI 14, MACD, dan Volume.
+   - Kolom Kanan: Bobot Model Hibrida (60:40), Skor Sub-Model, dan Faktor Pemicu Utama (Key Drivers).
+5. Tabel Audit Rekam Jejak 30 Hari:
+   - Daftar audit harian transparan dengan status BENAR (hijau) atau SALAH (merah).
+6. Risk Disclaimer Box di bagian bawah.
+
+
+================================================================================
+BAGIAN 10: MODUL SCRAPING BERITA & SENTIMENT NLP ENGINE
+================================================================================
+
+10.1. Mekanisme Scraping & Agregasi Berita:
+- Mengambil feed berita aktual dari portal finansial terpercaya.
+- Mengekstrak judul berita, ringkasan, sumber, dan waktu publikasi.
+- Mengidentifikasi instrumen aset yang terdampak (impacted assets).
+
+10.2. Analisis Sentimen NLP:
+- Menggunakan NLTK VADER dengan penyesuaian leksikon finansial (*financial lexicon*).
+- Menghasilkan nilai polaritas dari -1.0 (sangat negatif) hingga +1.0 (sangat positif).
+- Menghubungkan sentimen berita dengan data Fear & Greed Index untuk membentuk
+  komponen fundamental (40%) pada mesin prediksi.
+
+
+================================================================================
+BAGIAN 11: STANDAR PENGUJIAN, BENCHMARKING & JAMINAN KUALITAS (QA)
+================================================================================
+
+11.1. Pengujian Otomatis (Pytest & Vite Build):
+- Pengujian unit backend untuk perhitungan teknikal, scraping, dan prediksi harian.
+- Pengujian API live untuk memastikan waktu respons prediksi < 1.5 detik.
+- Validasi Vite frontend build bebas dari error TypeScript/JSX dan modularitas bersih.
+
+11.2. Kriteria Keberhasilan Model:
+- Model harus menghasilkan estimasi arah dan tingkat keyakinan yang rasional (55% - 92%).
+- Tabel audit harus selalu menyajikan 30 hari perdagangan terakhir secara lengkap.
+
+
+================================================================================
+BAGIAN 12: KEAMANAN, PRIVASI & PANDUAN DEPLOYMENT RUNTIME
+================================================================================
+
+12.1. Panduan Menjalankan Sistem:
+1. Menyalakan MySQL di XAMPP Control Panel (Port 3306).
+2. Memastikan database `finblix` aktif dan tabel terisi.
+3. Menjalankan Backend:
+   `cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
+4. Menjalankan Frontend:
+   `cd frontend && npm run dev`
+5. Membuka peramban di `http://localhost:5173`. Dashboard Prediksi Harian akan langsung
+   terbuka sebagai halaman utama.
+
+================================================================================
+          FINBLIX - INTELIJEN PREDIKSI HARIAN FINANSIAL BERKECEPATAN TINGGI
+================================================================================
