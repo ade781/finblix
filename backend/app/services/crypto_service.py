@@ -15,6 +15,8 @@ BINANCE_TIMEFRAMES = {
 }
 
 class CryptoService:
+    _crypto_cache = {}
+
     @staticmethod
     def normalize_symbol(symbol: str) -> str:
         # 'BTC/USDT' -> 'BTCUSDT'
@@ -22,13 +24,20 @@ class CryptoService:
 
     @classmethod
     async def fetch_binance_bars(cls, symbol: str, timeframe: str = "1d", limit: int = 150) -> List[Dict[str, Any]]:
+        cache_key = f"{symbol}_{timeframe}"
+        now_ts = time.time()
+        if cache_key in cls._crypto_cache:
+            entry_time, cached_bars = cls._crypto_cache[cache_key]
+            if (now_ts - entry_time) < 30 and len(cached_bars) >= min(limit, len(cached_bars)):
+                return cached_bars[-limit:]
+
         binance_symbol = cls.normalize_symbol(symbol)
         interval = BINANCE_TIMEFRAMES.get(timeframe, "1d")
         url = f"https://api.binance.com/api/v3/klines?symbol={binance_symbol}&interval={interval}&limit={limit}"
         
         bars = []
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=3.0) as client:
                 res = await client.get(url)
                 if res.status_code == 200:
                     data = res.json()
@@ -43,12 +52,16 @@ class CryptoService:
                             "close": float(item[4]),
                             "volume": float(item[5])
                         })
-                    return bars
+                    if bars:
+                        cls._crypto_cache[cache_key] = (now_ts, bars)
+                        return bars
         except Exception as e:
             print(f"[CryptoService] Error fetching from Binance API: {e}")
 
         # Fallback to simulated data if Binance is unreachable
-        return cls._generate_fallback_bars(symbol, limit)
+        fallback = cls._generate_fallback_bars(symbol, limit)
+        cls._crypto_cache[cache_key] = (now_ts, fallback)
+        return fallback
 
     @classmethod
     def get_or_cache_bars(cls, db: Session, asset: Asset, timeframe: str = "1d", limit: int = 150, live_bars: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:

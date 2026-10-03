@@ -160,7 +160,7 @@ export default function ThreeHourProjectionChart({
             </h3>
           </div>
           <p className="text-xs text-slate-400">
-            Lintasan proyeksi dinamis dari harga saat ini ($t=0$) menuju estimasi target ($t+3\text{h}$) dengan koridor toleransi fluktuasi volatilitas ATR.
+            Lintasan proyeksi dinamis dari harga saat ini (t=0) menuju estimasi target (t+3 jam) dengan koridor toleransi fluktuasi volatilitas ATR.
           </p>
         </div>
 

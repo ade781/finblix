@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 import csv
 import io
+import asyncio
 from datetime import datetime, timezone
 from app.api.deps import get_db
 from app.models.asset import Asset
@@ -41,7 +42,7 @@ async def get_market_history(
         bars_data = await CryptoService.fetch_binance_bars(asset.symbol, timeframe=timeframe, limit=limit)
         bars_data = CryptoService.get_or_cache_bars(db, asset, timeframe=timeframe, limit=limit, live_bars=bars_data)
     else:
-        bars_data = StockService.fetch_stock_bars(asset.symbol, timeframe=timeframe, limit=limit)
+        bars_data = await asyncio.to_thread(StockService.fetch_stock_bars, asset.symbol, timeframe=timeframe, limit=limit)
         bars_data = StockService.get_or_cache_bars(db, asset, timeframe=timeframe, limit=limit, live_bars=bars_data)
 
     return MarketHistoryResponse(

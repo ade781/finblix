@@ -21,10 +21,18 @@ YF_PERIOD_MAP = {
     "1d": "1y",
     "1w": "2y"
 }
-
 class StockService:
+    _bars_cache = {}
+
     @classmethod
     def fetch_stock_bars(cls, symbol: str, timeframe: str = "1d", limit: int = 150) -> List[Dict[str, Any]]:
+        cache_key = f"{symbol}_{timeframe}"
+        now_ts = time.time()
+        if cache_key in cls._bars_cache:
+            entry_time, cached_bars = cls._bars_cache[cache_key]
+            if (now_ts - entry_time) < 45 and len(cached_bars) >= min(limit, len(cached_bars)):
+                return cached_bars[-limit:]
+
         yf_interval = YF_INTERVAL_MAP.get(timeframe, "1d")
         yf_period = YF_PERIOD_MAP.get(timeframe, "1y")
 
@@ -52,11 +60,14 @@ class StockService:
                         "volume": round(float(row["Volume"]), 2),
                     })
                 if bars:
+                    cls._bars_cache[cache_key] = (now_ts, bars)
                     return bars
         except Exception as e:
             print(f"[StockService] Error fetching {symbol} from yfinance: {e}")
 
-        return cls._generate_fallback_bars(symbol, limit)
+        fallback = cls._generate_fallback_bars(symbol, limit)
+        cls._bars_cache[cache_key] = (now_ts, fallback)
+        return fallback
 
     @classmethod
     def get_or_cache_bars(cls, db: Session, asset: Asset, timeframe: str = "1d", limit: int = 150, live_bars: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:

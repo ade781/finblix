@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+import asyncio
 from app.api.deps import get_db
 from app.models.asset import Asset
 from app.models.indicator import TechnicalSnapshot
@@ -25,7 +26,7 @@ async def get_indicators(
     if asset.asset_type == "crypto":
         bars = await CryptoService.fetch_binance_bars(asset.symbol, timeframe=timeframe, limit=200)
     else:
-        bars = StockService.fetch_stock_bars(asset.symbol, timeframe=timeframe, limit=200)
+        bars = await asyncio.to_thread(StockService.fetch_stock_bars, asset.symbol, timeframe=timeframe, limit=200)
 
     ta = TAEngine.calculate_indicators(bars)
 
