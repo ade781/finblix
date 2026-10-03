@@ -132,22 +132,30 @@ class MLTrainingEngine:
         cls, 
         bars: List[Dict[str, Any]], 
         fng_map: Dict[str, float], 
-        news_map: Optional[Dict[str, float]] = None
+        news_map: Optional[Dict[str, float]] = None,
+        is_training: bool = True
     ) -> pd.DataFrame:
         """
         Membuat matriks fitur kuantitatif & fundamental historis secara ketat tanpa data leakage.
-        Mengintegrasikan 20 fitur: returns, moving averages, RSI, MACD, Bollinger Bands, ATR, volume,
-        serta data sentimen riil dari RSS berita & Fear/Greed harian.
+        Mengintegrasikan 25 fitur: candlestick geometry (upper/lower wick, body ratio),
+        multi-horizon returns, multi-timeframe moving averages, RSI momentum, MACD acceleration,
+        Bollinger Bands, ATR, volume dynamics, serta sentimen riil Fear/Greed & RSS berita.
         """
         df = pd.DataFrame(bars)
         df["date_obj"] = df["time"].apply(lambda t: datetime.fromtimestamp(t, timezone.utc))
         df["date_str"] = df["date_obj"].apply(lambda dt: dt.strftime("%Y-%m-%d"))
 
-        # 1. Technical Indicators & Returns
+        # 1. Technical Indicators & Price Action Geometry
         close = df["close"]
         high = df["high"]
         low = df["low"]
+        open_p = df["open"]
         vol = df["volume"].replace(0, 1)
+
+        c_range = (high - low).replace(0, 1e-9)
+        df["upper_wick"] = (high - np.maximum(close, open_p)) / c_range
+        df["lower_wick"] = (np.minimum(close, open_p) - low) / c_range
+        df["body_ratio"] = (close - open_p).abs() / c_range
 
         # Multi-horizon Returns
         df["ret_1d"] = close.pct_change(1)
@@ -157,11 +165,16 @@ class MLTrainingEngine:
         df["ret_30d"] = close.pct_change(30)
 
         # Moving Averages & Trend Alignment
+        ema9 = close.ewm(span=9, adjust=False).mean()
         ema20 = close.ewm(span=20, adjust=False).mean()
         ema50 = close.ewm(span=50, adjust=False).mean()
+        ema100 = close.ewm(span=100, adjust=False).mean()
+
         df["price_to_ema20"] = (close / ema20) - 1.0
         df["price_to_ema50"] = (close / ema50) - 1.0
         df["ema20_to_ema50"] = (ema20 / ema50) - 1.0
+        df["price_to_weekly_ema"] = (close / ema100) - 1.0
+        df["ema9_slope"] = ema9.diff() / (close + 1e-9)
 
         # RSI 14 & RSI Delta
         delta = close.diff()
@@ -171,12 +184,14 @@ class MLTrainingEngine:
         df["rsi_14"] = 100 - (100 / (1 + rs))
         df["rsi_delta"] = df["rsi_14"].diff(3)
 
-        # MACD (12, 26, 9)
+        # MACD (12, 26, 9) & Acceleration
         ema12 = close.ewm(span=12, adjust=False).mean()
         ema26 = close.ewm(span=26, adjust=False).mean()
         macd_line = ema12 - ema26
         macd_signal = macd_line.ewm(span=9, adjust=False).mean()
-        df["macd_hist"] = (macd_line - macd_signal) / (close + 1e-9)
+        macd_raw_hist = macd_line - macd_signal
+        df["macd_hist"] = macd_raw_hist / (close + 1e-9)
+        df["macd_accel"] = df["macd_hist"].diff()
 
         # Bollinger Bands %B & Bandwidth
         sma20 = close.rolling(20).mean()
@@ -217,20 +232,26 @@ class MLTrainingEngine:
         day_of_week = df["date_obj"].apply(lambda dt: dt.weekday())
         df["day_of_week"] = day_of_week / 6.0
 
-        # Target variable Y: Next day price direction (1 = NAIK, 0 = TURUN)
-        # Shift -1 looks at NEXT day's close compared to CURRENT day's close
-        df["target"] = (close.shift(-1) > close).astype(int)
-
         feature_cols_all = [
+            "upper_wick", "lower_wick", "body_ratio",
             "ret_1d", "ret_3d", "ret_7d", "ret_14d", "ret_30d",
             "price_to_ema20", "price_to_ema50", "ema20_to_ema50",
-            "rsi_14", "rsi_delta", "macd_hist",
+            "price_to_weekly_ema", "ema9_slope",
+            "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
-            "day_of_week", "target"
+            "day_of_week"
         ]
-        # Drop rows with NaN (due to 30-day warmup and the last bar which has no next day)
-        clean_df = df.dropna(subset=feature_cols_all).iloc[:-1].reset_index(drop=True)
+
+        if is_training:
+            # Target variable Y: Next day price direction (1 = NAIK, 0 = TURUN)
+            df["target"] = (close.shift(-1) > close).astype(int)
+            # Bar terakhir tidak memiliki target esok hari, jadi hanya bar dengan target yang digunakan
+            clean_df = df.dropna(subset=feature_cols_all + ["target"]).iloc[:-1].reset_index(drop=True)
+        else:
+            # Mode inferensi: bar hari ini digunakan secara utuh untuk memprediksi hari esok
+            clean_df = df.dropna(subset=feature_cols_all).reset_index(drop=True)
+
         return clean_df
 
     @classmethod
@@ -267,13 +288,15 @@ class MLTrainingEngine:
         # 3. Ambil data sentimen berita hasil scraping riil dari database
         news_sentiment_map = ScraperService.get_date_sentiment_map(db, symbol)
 
-        # 4. Rekayasa Fitur Kuantitatif & Sentimen (20 Fitur)
-        dataset = cls.build_feature_dataset(bars, fng_map, news_sentiment_map)
+        # 4. Rekayasa Fitur Kuantitatif & Sentimen (26 Fitur Komprehensif)
+        dataset = cls.build_feature_dataset(bars, fng_map, news_sentiment_map, is_training=True)
         
         feature_cols = [
+            "upper_wick", "lower_wick", "body_ratio",
             "ret_1d", "ret_3d", "ret_7d", "ret_14d", "ret_30d",
             "price_to_ema20", "price_to_ema50", "ema20_to_ema50",
-            "rsi_14", "rsi_delta", "macd_hist",
+            "price_to_weekly_ema", "ema9_slope",
+            "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
             "day_of_week"
@@ -454,11 +477,11 @@ class MLTrainingEngine:
             db_bars = db.query(OHLCVBar).filter(
                 OHLCVBar.asset_id == asset.id,
                 OHLCVBar.timeframe == "1d"
-            ).order_by(OHLCVBar.open_time.desc()).limit(80).all()
+            ).order_by(OHLCVBar.open_time.desc()).limit(120).all()
 
-            if len(db_bars) < 35:
-                bars = await cls.fetch_historical_bars(db, asset, limit=100)
-                if len(bars) < 35:
+            if len(db_bars) < 50:
+                bars = await cls.fetch_historical_bars(db, asset, limit=150)
+                if len(bars) < 50:
                     return None
             else:
                 bars = [
@@ -475,7 +498,7 @@ class MLTrainingEngine:
 
             fng_map = cls.load_historical_fng_series()
             news_map = ScraperService.get_date_sentiment_map(db, symbol)
-            dataset = cls.build_feature_dataset(bars, fng_map, news_map)
+            dataset = cls.build_feature_dataset(bars, fng_map, news_map, is_training=False)
             if dataset.empty:
                 return None
 

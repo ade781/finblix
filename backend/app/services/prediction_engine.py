@@ -162,6 +162,15 @@ class DailyPredictionEngine:
         else:
             composite = (tech_score * 0.65) + (fund_score * 0.35)
 
+        # Anti-Noise Deadband Filter: Cegah flip-flop acak saat pasar bimbang
+        if abs(composite) < 2.5:
+            if p_close > p_open and lower_wick >= upper_wick:
+                composite = 3.5
+            elif p_close < p_open and upper_wick >= lower_wick:
+                composite = -3.5
+            else:
+                composite = 3.5 if weekly_trend == "BULLISH" else -3.5
+
         direction = "NAIK" if composite >= 0 else "TURUN"
         confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
         mtf_confluence = "PRO_TREND" if ((direction == "NAIK" and weekly_trend == "BULLISH") or (direction == "TURUN" and weekly_trend == "BEARISH")) else "COUNTER_TREND"
@@ -210,6 +219,11 @@ class DailyPredictionEngine:
         p_high = float(h.iloc[-1])
         p_low = float(l.iloc[-1])
 
+        # Candlestick Range & Wicks
+        c_range = max(1e-9, p_high - p_low)
+        upper_wick = (p_high - max(p_close, p_open)) / c_range
+        lower_wick = (min(p_close, p_open) - p_low) / c_range
+
         # Fast Moving averages (9 vs 21) & Slow (50)
         ema9_s = c.ewm(span=9, adjust=False).mean()
         ema21_s = c.ewm(span=21, adjust=False).mean()
@@ -234,6 +248,13 @@ class DailyPredictionEngine:
         # Volume Ratio
         vol_ratio = float(v.iloc[-1] / (v.rolling(15).mean().iloc[-1] + 1e-9))
 
+        # Bollinger Bands (20, 2)
+        sma20 = c.rolling(20).mean()
+        std20 = c.rolling(20).std()
+        upper_b = float((sma20 + (std20 * 2)).iloc[-1])
+        lower_b = float((sma20 - (std20 * 2)).iloc[-1])
+        percent_b = float((p_close - lower_b) / ((upper_b - lower_b) + 1e-9))
+
         score = 0.0
         tech_reasons = []
 
@@ -250,23 +271,46 @@ class DailyPredictionEngine:
             score -= 15.0
             tech_reasons.append(f"Konfluensi Multi-Timeframe: Tren Mingguan (Weekly 1W) mengonfirmasi distribusi institusi di bawah EMA 20-Minggu (Rp {ema_w_val:,.0f}).")
 
-        # 2. Multi-Timeframe Dip/Rally Reversal Dynamics
+        # 2. Multi-day returns
         ret_1 = (p_close - float(c.iloc[-2])) / (float(c.iloc[-2]) + 1e-9) if len(c) > 1 else 0
         ret_2 = (float(c.iloc[-2]) - float(c.iloc[-3])) / (float(c.iloc[-3]) + 1e-9) if len(c) > 2 else 0
 
-        if weekly_trend == "BULLISH" and ret_1 < 0 and ret_2 < 0:
+        # 3. Wyckoff Volume Spread Analysis (VSA) Dynamics
+        if ret_1 < 0 and (lower_wick > 0.32 or (vol_ratio > 1.20 and percent_b < 0.30)):
             score += 25.0
+            tech_reasons.append("VSA Stopping Volume: Penyerapan tekanan jual oleh *smart money* di dekat area *support*.")
+        elif ret_1 > 0 and (upper_wick > 0.32 or (vol_ratio > 1.20 and percent_b > 0.80)):
+            score -= 25.0
+            tech_reasons.append("VSA Buying Climax: Dorongan beli kelelahan dan menghadapi aksi distribusi institusi di area resistensi.")
+        elif ret_1 < 0 and vol_ratio < 0.70 and weekly_trend == "BULLISH":
+            score += 15.0
+            tech_reasons.append("VSA No Supply: Volume penjualan mengering saat koreksi tren makro bullish (peluang pembalikan arah).")
+        elif ret_1 > 0 and vol_ratio < 0.70 and weekly_trend == "BEARISH":
+            score -= 15.0
+            tech_reasons.append("VSA No Demand: Kenaikan harga tanpa dukungan likuiditas pembeli dalam tren makro bearish.")
+
+        # 4. Bollinger Bands Extreme Reversal
+        if percent_b < 0.08 or (percent_b < 0.18 and rsi < 32):
+            score += 25.0
+            tech_reasons.append(f"Penetrasi pita bawah Bollinger Bands (%B {percent_b:.2f}) mengindikasikan peluang *mean-reversion bounce* tinggi.")
+        elif percent_b > 0.92 or (percent_b > 0.82 and rsi > 70):
+            score -= 25.0
+            tech_reasons.append(f"Penetrasi pita atas Bollinger Bands (%B {percent_b:.2f}) memicu risiko *pullback* teknikal wajar.")
+
+        # 5. Multi-Timeframe Dip/Rally Reversal Dynamics
+        if weekly_trend == "BULLISH" and ret_1 < 0 and ret_2 < 0:
+            score += 20.0
             tech_reasons.append("Peluang Akumulasi Buy-on-Dip: Koreksi 2 hari beruntun pada tren makro bullish mingguan memicu pantulan teknikal.")
         elif weekly_trend == "BEARISH" and ret_1 > 0 and ret_2 > 0:
-            score -= 25.0
+            score -= 20.0
             tech_reasons.append("Peluang Distribusi Sell-on-Strength: Rebound 2 hari beruntun pada tren makro bearish mingguan menghadapi tekanan jual.")
 
-        # 3. Moving Average Alignment (9 vs 21) & 50-day EMA
+        # 6. Moving Average Alignment (9 vs 21) & Slope Trajectory
         if e9 > e21: 
-            score += 15.0
+            score += 10.0
             tech_reasons.append(f"EMA 9 ({e9:.1f}) di atas EMA 21 ({e21:.1f}) mengonfirmasi tren institusional bullish.")
         else: 
-            score -= 15.0
+            score -= 10.0
             tech_reasons.append(f"EMA 9 ({e9:.1f}) di bawah EMA 21 ({e21:.1f}) mengonfirmasi tekanan tren bearish.")
 
         if slope9 > 0: 
@@ -276,40 +320,17 @@ class DailyPredictionEngine:
             score -= 10.0
             tech_reasons.append("Kemiringan slope EMA 9 bergerak melandai turun (negative trajectory).")
 
-        if p_close > ema50_val: 
-            score += 10.0
-            tech_reasons.append(f"Harga berada di atas rata-rata 50 hari ({ema50_val:.1f}).")
-        else: 
-            score -= 10.0
-            tech_reasons.append(f"Harga berada di bawah rata-rata 50 hari ({ema50_val:.1f}).")
-
-        # 4. MACD acceleration
+        # 7. MACD acceleration
         if hist_accel > 0: 
-            score += 20.0
+            score += 15.0
             tech_reasons.append("Akselerasi histogram MACD meningkat positif menandakan akumulasi pembeli.")
         else: 
-            score -= 20.0
-            tech_reasons.append("Akselerasi histogram MACD menurun menandakan dorongan distribusi penjual.")
-
-        # 5. RSI
-        if rsi < 35: 
-            score += 20.0
-            tech_reasons.append(f"RSI jenuh jual ({rsi:.1f}), peluang rebound teknikal saham terbuka.")
-        elif rsi > 70: 
-            score -= 20.0
-            tech_reasons.append(f"RSI jenuh beli ({rsi:.1f}), aksi profit taking wajar.")
-
-        # 6. Volume confirmation
-        if (p_close > p_open) and vol_ratio > 1.15: 
-            score += 15.0
-            tech_reasons.append(f"Penguatan harga didukung lonjakan volume ({vol_ratio:.1f}x dari rata-rata).")
-        elif (p_close < p_open) and vol_ratio > 1.15: 
             score -= 15.0
-            tech_reasons.append(f"Pelemahan harga disertai volume distribusi ({vol_ratio:.1f}x dari rata-rata).")
+            tech_reasons.append("Akselerasi histogram MACD menurun menandakan dorongan distribusi penjual.")
 
         tech_score = max(-100.0, min(100.0, score))
 
-        # 7. BERTopic Fundamental Topic Modeling Analysis (Khusus Saham)
+        # 8. BERTopic Fundamental Topic Modeling Analysis (Khusus Saham)
         fund_reasons = []
         if bertopic_res and bertopic_res.get("has_topics"):
             dom_topic = bertopic_res.get("dominant_topic", "Dinamika Pasar Saham")
@@ -320,7 +341,7 @@ class DailyPredictionEngine:
             if kws:
                 fund_reasons.append(f"Kata Kunci Representasi c-TF-IDF: {', '.join(kws[:4])}.")
         else:
-            fund_score = max(-100.0, min(100.0, news_sentiment * 50.0))
+            fund_score = max(-100.0, min(100.0, news_sentiment * 40.0))
             if abs(news_sentiment) > 0.15:
                 tonality = "optimis" if news_sentiment > 0 else "waspada"
                 fund_reasons.append(f"Sentimen media saham {tonality} ({news_sentiment:+.2f}).")
@@ -332,6 +353,15 @@ class DailyPredictionEngine:
             composite = (tech_score * 0.45) + (fund_score * 0.25) + (ml_score * 0.30)
         else:
             composite = (tech_score * 0.65) + (fund_score * 0.35)
+
+        # Anti-Noise Deadband Filter: Cegah flip-flop acak saat pasar bimbang
+        if abs(composite) < 3.0:
+            if p_close > p_open and lower_wick >= upper_wick:
+                composite = 3.5
+            elif p_close < p_open and upper_wick >= lower_wick:
+                composite = -3.5
+            else:
+                composite = 3.5 if weekly_trend == "BULLISH" else -3.5
 
         direction = "NAIK" if composite >= 0 else "TURUN"
         confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)

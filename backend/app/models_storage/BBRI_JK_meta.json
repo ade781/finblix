@@ -1,52 +1,52 @@
 {
   "symbol": "BBRI.JK",
-  "trained_at": "2026-10-03 15:48:55 UTC",
+  "trained_at": "2026-10-03 17:57:50 UTC",
   "dataset_bars": 719,
   "samples_trained": 550,
   "samples_tested": 138,
-  "training_duration_seconds": 11.21,
+  "training_duration_seconds": 3.46,
   "metrics": {
-    "train_accuracy_pct": 97.27,
-    "cv_5fold_mean_pct": 53.19,
-    "cv_5fold_std_pct": 2.92,
-    "test_accuracy_pct": 55.07,
-    "precision_pct": 46.67,
-    "recall_pct": 35.59,
-    "f1_score_pct": 40.38,
-    "roc_auc_pct": 55.55
+    "train_accuracy_pct": 94.18,
+    "cv_5fold_mean_pct": 51.87,
+    "cv_5fold_std_pct": 2.35,
+    "test_accuracy_pct": 53.62,
+    "precision_pct": 45.1,
+    "recall_pct": 38.98,
+    "f1_score_pct": 41.82,
+    "roc_auc_pct": 53.66
   },
   "top_features": [
     {
       "feature": "news_sentiment_7d",
-      "importance": 6.95
-    },
-    {
-      "feature": "ret_1d",
-      "importance": 6.85
+      "importance": 5.62
     },
     {
       "feature": "fng_delta",
-      "importance": 6.57
+      "importance": 5.57
     },
     {
-      "feature": "volume_ratio",
-      "importance": 6.46
+      "feature": "ret_1d",
+      "importance": 5.46
+    },
+    {
+      "feature": "lower_wick",
+      "importance": 5.38
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 5.32
     },
     {
       "feature": "ret_30d",
-      "importance": 6.04
+      "importance": 4.83
     },
     {
-      "feature": "macd_hist",
-      "importance": 5.75
+      "feature": "volume_ratio",
+      "importance": 4.77
     },
     {
       "feature": "ret_3d",
-      "importance": 5.33
-    },
-    {
-      "feature": "bb_width",
-      "importance": 5.16
+      "importance": 4.57
     }
   ],
   "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",

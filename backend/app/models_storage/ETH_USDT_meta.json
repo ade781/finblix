@@ -1,52 +1,52 @@
 {
   "symbol": "ETH/USDT",
-  "trained_at": "2026-10-03 15:48:44 UTC",
+  "trained_at": "2026-10-03 17:57:39 UTC",
   "dataset_bars": 1000,
   "samples_trained": 775,
   "samples_tested": 194,
-  "training_duration_seconds": 11.85,
+  "training_duration_seconds": 6.42,
   "metrics": {
-    "train_accuracy_pct": 97.03,
-    "cv_5fold_mean_pct": 53.49,
-    "cv_5fold_std_pct": 0.49,
-    "test_accuracy_pct": 50.0,
-    "precision_pct": 53.68,
-    "recall_pct": 49.04,
-    "f1_score_pct": 51.26,
-    "roc_auc_pct": 52.0
+    "train_accuracy_pct": 93.29,
+    "cv_5fold_mean_pct": 52.87,
+    "cv_5fold_std_pct": 3.0,
+    "test_accuracy_pct": 51.03,
+    "precision_pct": 55.06,
+    "recall_pct": 47.12,
+    "f1_score_pct": 50.78,
+    "roc_auc_pct": 56.44
   },
   "top_features": [
     {
       "feature": "day_of_week",
-      "importance": 8.52
-    },
-    {
-      "feature": "ret_3d",
-      "importance": 7.07
-    },
-    {
-      "feature": "ret_1d",
-      "importance": 6.17
+      "importance": 7.38
     },
     {
       "feature": "macd_hist",
-      "importance": 6.02
+      "importance": 5.19
+    },
+    {
+      "feature": "ret_3d",
+      "importance": 5.15
     },
     {
       "feature": "atr_norm",
-      "importance": 5.75
+      "importance": 4.83
+    },
+    {
+      "feature": "upper_wick",
+      "importance": 4.61
     },
     {
       "feature": "volume_ratio",
-      "importance": 5.44
+      "importance": 4.49
     },
     {
-      "feature": "rsi_14",
-      "importance": 5.44
+      "feature": "rsi_delta",
+      "importance": 4.43
     },
     {
-      "feature": "bb_width",
-      "importance": 5.43
+      "feature": "ret_1d",
+      "importance": 4.26
     }
   ],
   "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest 500 + Gradient Boosting 400 + Extra Trees 300 = 1,200 Trees)",
