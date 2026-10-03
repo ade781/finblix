@@ -149,6 +149,7 @@ export default function DailyPredictionView({
   const filteredDailyLog = useMemo(() => {
     if (!track?.daily_log) return [];
     if (auditFilter === 'high') return track.daily_log.filter(l => l.conviction === 'HIGH');
+    if (auditFilter === 'pro_trend') return track.daily_log.filter(l => l.mtf_confluence === 'PRO_TREND');
     if (auditFilter === 'correct') return track.daily_log.filter(l => l.is_correct);
     if (auditFilter === 'incorrect') return track.daily_log.filter(l => !l.is_correct);
     return track.daily_log;
@@ -262,8 +263,8 @@ export default function DailyPredictionView({
                       Skor Komposit: <span className="font-bold text-white">{pred?.composite_score > 0 ? `+${pred?.composite_score}` : pred?.composite_score}</span> / 100
                     </div>
 
-                    {/* Conviction Tier Badge */}
-                    <div className="mt-2 flex items-center space-x-2">
+                    {/* Conviction & Multi-Timeframe Badges */}
+                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
                       <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold font-mono border flex items-center space-x-1.5 ${
                         pred?.conviction_tier === 'HIGH' 
                           ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40 shadow-sm shadow-emerald-500/10' 
@@ -274,6 +275,28 @@ export default function DailyPredictionView({
                         <ShieldCheck className="w-3 h-3" />
                         <span>{pred?.trade_status || 'HIGH CONVICTION'}</span>
                       </span>
+
+                      {pred?.weekly_trend && (
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold font-mono border ${
+                          pred?.weekly_trend === 'BULLISH'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                        }`}>
+                          WEEKLY 1W: {pred?.weekly_trend}
+                        </span>
+                      )}
+
+                      {pred?.mtf_confluence === 'PRO_TREND' ? (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono border bg-teal-500/15 text-teal-300 border-teal-500/40 flex items-center space-x-1">
+                          <CheckCircle2 className="w-3 h-3 text-teal-400" />
+                          <span>PRO-TREND (1W ALIGNED)</span>
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono border bg-amber-500/15 text-amber-400 border-amber-500/40 flex items-center space-x-1">
+                          <AlertTriangle className="w-3 h-3 text-amber-400" />
+                          <span>COUNTER-TREND SETUP</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -709,6 +732,16 @@ export default function DailyPredictionView({
                   <span>Sinyal Kuat ({hc?.days_evaluated || 0})</span>
                 </button>
                 <button
+                  onClick={() => setAuditFilter('pro_trend')}
+                  className={`px-3 py-1 rounded-lg transition-all ${
+                    auditFilter === 'pro_trend'
+                      ? 'bg-teal-600 text-white font-bold shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Pro-Trend 1W
+                </button>
+                <button
                   onClick={() => setAuditFilter('correct')}
                   className={`px-3 py-1 rounded-lg transition-all ${
                     auditFilter === 'correct'
@@ -739,6 +772,7 @@ export default function DailyPredictionView({
                     <th className="py-3 px-4 font-semibold">Tanggal Bar</th>
                     <th className="py-3 px-4 font-semibold">Harga Close</th>
                     <th className="py-3 px-4 font-semibold">Tingkat Conviction</th>
+                    <th className="py-3 px-4 font-semibold">Konfluensi MTF (1W)</th>
                     <th className="py-3 px-4 font-semibold">Prediksi Arah</th>
                     <th className="py-3 px-4 font-semibold">Pergerakan Aktual</th>
                     <th className="py-3 px-4 text-right font-semibold">Perubahan (%)</th>
@@ -770,6 +804,15 @@ export default function DailyPredictionView({
                           ) : (
                             <span>KONSOLIDASI</span>
                           )}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border inline-flex items-center space-x-1 ${
+                          log.mtf_confluence === 'PRO_TREND'
+                            ? 'bg-teal-500/15 text-teal-300 border-teal-500/30'
+                            : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                        }`}>
+                          <span>{log.mtf_confluence === 'PRO_TREND' ? 'PRO-TREND' : 'COUNTER'}</span>
                         </span>
                       </td>
                       <td className="py-3 px-4">
