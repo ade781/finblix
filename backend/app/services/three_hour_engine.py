@@ -266,6 +266,27 @@ class ThreeHourPredictionEngine:
         df["atr_ratio"] = atr14 / (tr.rolling(50).mean() + 1e-9) # Volatility regime
         df["trend_strength"] = (close - ema50).abs() / (atr14 + 1e-9)
 
+        # SOTA Feature Engineering (Cyclical Encoding & Lags & Rolling Volatility)
+        # SOTA Feature Engineering (Cyclical Encoding & Lags & Rolling Volatility)
+        if "date_obj" in df.columns:
+            day_of_week = df["date_obj"].dt.weekday
+        elif "time" in df.columns:
+            # Handle both seconds and milliseconds unix timestamps
+            is_ms = df["time"].max() > 1e11
+            dt_series = pd.to_datetime(df["time"], unit='ms' if is_ms else 's')
+            day_of_week = dt_series.dt.weekday
+        else:
+            day_of_week = pd.Series(0, index=df.index)
+            
+        df["day_sin"] = np.sin(2.0 * np.pi * day_of_week / 7.0)
+        df["day_cos"] = np.cos(2.0 * np.pi * day_of_week / 7.0)
+        
+        df["rolling_vol_12h"] = df["ret_15m"].rolling(48).std().fillna(0)
+        df["rolling_vol_24h"] = df["ret_15m"].rolling(96).std().fillna(0)
+        
+        df["ret_15m_lag1"] = df["ret_15m"].shift(1).fillna(0)
+        df["ret_15m_lag2"] = df["ret_15m"].shift(2).fillna(0)
+
         # Compat aliases
         df["rsi_1h"] = df["rsi_15m"]
         df["cmf_12h"] = df["cmf_14"]
@@ -291,7 +312,8 @@ class ThreeHourPredictionEngine:
             "vol_surge", "cmf_14", "sin_time", "cos_time", "daily_sentiment",
             "corwin_schultz", "frac_diff_close", "amihud_illiq", "ofip",
             "bb_width_roc", "vol_roc", "rsi_macd_divergence", "atr_ratio", "trend_strength",
-            "session_asian", "session_london", "session_us"
+            "session_asian", "session_london", "session_us",
+            "day_sin", "day_cos", "rolling_vol_12h", "rolling_vol_24h", "ret_15m_lag1", "ret_15m_lag2"
         ]
         
         # Horizon is 12 (12 * 15m = 3h)

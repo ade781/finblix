@@ -1,0 +1,55 @@
+2026-10-04 22:12:15,922 [INFO] Starting Market-Wide ML Screener Daemon...
+2026-10-04 22:12:15,923 [INFO] --- Scanning 15 coins for High Conviction Signals ---
+2026-10-04 22:12:20,663 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/BTC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:21,602 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ETH/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:22,307 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/BNB/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:22,661 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ADA/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:22,894 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ETC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:23,080 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/DOGE/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:23,260 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/AVAX/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:23,541 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/LINK/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:23,722 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/UNI/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:24,405 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/XRP/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:24,608 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/LTC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:24,786 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/DOT/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:24,961 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/MATIC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:25,182 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ATOM/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:26,100 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/SOL/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:12:26,103 [INFO] Scan Complete. Found 0 strong signals.
+2026-10-04 22:12:26,105 [INFO] Sleeping for 15 minutes...
+2026-10-04 22:27:26,121 [INFO] --- Scanning 15 coins for High Conviction Signals ---
+2026-10-04 22:27:30,231 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/BTC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:31,060 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ETH/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:31,171 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/DOT/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:31,859 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/BNB/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:32,075 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/MATIC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:32,174 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ETC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:32,330 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ATOM/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:32,719 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/DOGE/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:33,127 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ADA/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:33,211 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/AVAX/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:33,293 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/LTC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:33,958 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/XRP/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:34,072 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/UNI/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:34,762 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/SOL/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:34,849 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/LINK/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:27:34,851 [INFO] Scan Complete. Found 0 strong signals.
+2026-10-04 22:27:34,853 [INFO] Sleeping for 15 minutes...
+2026-10-04 22:42:34,867 [INFO] --- Scanning 15 coins for High Conviction Signals ---
+2026-10-04 22:42:40,172 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/BTC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:41,351 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ETH/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:41,536 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/DOT/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:41,710 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/LINK/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:41,869 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/LTC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:42,017 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ATOM/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:42,162 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ADA/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:42,934 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/XRP/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:43,235 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/BNB/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:43,390 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/UNI/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:43,536 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/ETC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:44,489 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/SOL/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:44,655 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/DOGE/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:44,786 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/AVAX/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:45,068 [INFO] HTTP Request: GET http://127.0.0.1:8001/api/v1/prediction/daily/MATIC/USDT "HTTP/1.1 200 OK"
+2026-10-04 22:42:45,070 [INFO] Scan Complete. Found 0 strong signals.
+2026-10-04 22:42:45,073 [INFO] Sleeping for 15 minutes...

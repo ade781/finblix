@@ -1,53 +1,53 @@
 {
   "symbol": "TLKM.JK",
-  "trained_at": "2026-10-04 14:32:33 UTC",
+  "trained_at": "2026-10-04 15:59:17 UTC",
   "dataset_bars": 1204,
-  "samples_trained": 621,
-  "samples_tested": 235,
-  "training_duration_seconds": 9.15,
+  "samples_trained": 612,
+  "samples_tested": 231,
+  "training_duration_seconds": 190.97,
   "metrics": {
-    "train_accuracy_pct": 76.65,
-    "cv_5fold_mean_pct": 52.55,
-    "test_accuracy_pct": 48.94,
-    "roc_auc_pct": 50.08,
-    "hc_test_accuracy_pct": 46.67,
-    "hc_test_coverage_pct": 25.53
+    "train_accuracy_pct": 98.04,
+    "cv_5fold_mean_pct": 51.36,
+    "test_accuracy_pct": 51.52,
+    "roc_auc_pct": 53.94,
+    "hc_test_accuracy_pct": 55.56,
+    "hc_test_coverage_pct": 23.38
   },
   "top_features": [
     {
-      "feature": "ret_7d",
-      "importance": 2.458
-    },
-    {
-      "feature": "obv_slope",
-      "importance": 1.991
+      "feature": "fng_val",
+      "importance": 1.793
     },
     {
       "feature": "ret_1d",
-      "importance": 1.548
+      "importance": 1.552
     },
     {
-      "feature": "fng_val",
-      "importance": 1.5
+      "feature": "lower_wick",
+      "importance": 1.444
+    },
+    {
+      "feature": "ret_7d",
+      "importance": 1.114
     },
     {
       "feature": "body_ratio",
-      "importance": 1.497
+      "importance": 0.476
     },
     {
-      "feature": "volume_ratio",
-      "importance": 0.789
+      "feature": "ema9_slope",
+      "importance": 0.471
     },
     {
-      "feature": "fng_delta",
-      "importance": 0.543
+      "feature": "rsi_delta",
+      "importance": 0.453
     },
     {
       "feature": "ema20_to_ema50",
-      "importance": 0.498
+      "importance": 0.366
     }
   ],
-  "model_architecture": "hgb",
+  "model_architecture": "hgb_tuned",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": false
 }

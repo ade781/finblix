@@ -167,6 +167,16 @@ class MLTrainingEngine:
         df["atr_ratio"] = atr14 / (tr.rolling(50).mean() + 1e-9)
         df["trend_strength"] = (close - ema50).abs() / (atr14 + 1e-9)
 
+        # SOTA Feature Engineering
+        df["day_sin"] = np.sin(2.0 * np.pi * day_of_week / 7.0)
+        df["day_cos"] = np.cos(2.0 * np.pi * day_of_week / 7.0)
+        
+        df["rolling_vol_7d"] = df["ret_1d"].rolling(7).std().fillna(0)
+        df["rolling_vol_30d"] = df["ret_1d"].rolling(30).std().fillna(0)
+        
+        df["ret_1d_lag1"] = df["ret_1d"].shift(1).fillna(0)
+        df["ret_1d_lag2"] = df["ret_1d"].shift(2).fillna(0)
+
         return df
 
     @classmethod
@@ -191,7 +201,9 @@ class MLTrainingEngine:
             "choppiness_index", "cmf_20", "obv_slope", "adx_14",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
             "day_of_week", "bb_width_roc", "vol_roc", "rsi_macd_divergence",
-            "atr_ratio", "trend_strength"
+            "atr_ratio", "trend_strength",
+            "day_sin", "day_cos", "rolling_vol_7d", "rolling_vol_30d",
+            "ret_1d_lag1", "ret_1d_lag2"
         ]
 
         fwd_ret = (df["close"].shift(-1) / df["close"]) - 1.0
@@ -223,7 +235,9 @@ class MLTrainingEngine:
             "choppiness_index", "cmf_20", "obv_slope", "adx_14",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
             "day_of_week", "bb_width_roc", "vol_roc", "rsi_macd_divergence",
-            "atr_ratio", "trend_strength"
+            "atr_ratio", "trend_strength",
+            "day_sin", "day_cos", "rolling_vol_7d", "rolling_vol_30d",
+            "ret_1d_lag1", "ret_1d_lag2"
         ]
         
         if is_training:

@@ -117,5 +117,21 @@ export const triggerBulkScrapeNews = (limitPerFeed = 25) => {
   return api.post(`/prediction/scrape-daily-news?limit_per_feed=${limitPerFeed}`);
 };
 
+// ----------------------------------------------------------------------
+// Trade Bot Webhook
+// ----------------------------------------------------------------------
+
+export const executeWebhookSignal = async (payload) => {
+  try {
+    const response = await api.post(`/trade/execute-signal`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.detail || "Error triggering webhook");
+    }
+    throw error;
+  }
+};
+
 export default api;
 

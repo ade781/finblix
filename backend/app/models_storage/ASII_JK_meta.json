@@ -1,53 +1,53 @@
 {
   "symbol": "ASII.JK",
-  "trained_at": "2026-10-04 14:32:12 UTC",
+  "trained_at": "2026-10-04 15:56:05 UTC",
   "dataset_bars": 1204,
-  "samples_trained": 615,
-  "samples_tested": 235,
-  "training_duration_seconds": 17.08,
+  "samples_trained": 604,
+  "samples_tested": 231,
+  "training_duration_seconds": 73.12,
   "metrics": {
-    "train_accuracy_pct": 71.06,
-    "cv_5fold_mean_pct": 56.99,
-    "test_accuracy_pct": 57.87,
-    "roc_auc_pct": 61.42,
-    "hc_test_accuracy_pct": 63.76,
-    "hc_test_coverage_pct": 63.4
+    "train_accuracy_pct": 61.42,
+    "cv_5fold_mean_pct": 57.57,
+    "test_accuracy_pct": 57.58,
+    "roc_auc_pct": 59.71,
+    "hc_test_accuracy_pct": 62.96,
+    "hc_test_coverage_pct": 46.75
   },
   "top_features": [
     {
-      "feature": "ret_1d",
-      "importance": 2.41
-    },
-    {
-      "feature": "macd_accel",
-      "importance": 1.475
-    },
-    {
-      "feature": "body_ratio",
-      "importance": 1.182
-    },
-    {
-      "feature": "adx_14",
-      "importance": 1.081
-    },
-    {
-      "feature": "fng_delta",
-      "importance": 0.791
-    },
-    {
       "feature": "rsi_14",
-      "importance": 0.631
+      "importance": 1.817
     },
     {
       "feature": "ret_3d",
-      "importance": 0.506
+      "importance": 1.52
     },
     {
-      "feature": "volume_ratio",
-      "importance": 0.432
+      "feature": "macd_accel",
+      "importance": 1.297
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 0.916
+    },
+    {
+      "feature": "ema9_slope",
+      "importance": 0.726
+    },
+    {
+      "feature": "ret_1d",
+      "importance": 0.614
+    },
+    {
+      "feature": "fng_delta",
+      "importance": 0.357
+    },
+    {
+      "feature": "vol_roc",
+      "importance": 0.341
     }
   ],
-  "model_architecture": "soft_vote",
+  "model_architecture": "logreg",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": true
 }

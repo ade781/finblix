@@ -12,6 +12,7 @@ import {
   GlobalMarketIcon 
 } from '../icons/CustomIcons';
 import ThreeHourProjectionChart from './ThreeHourProjectionChart';
+import WebhookConfigView from './WebhookConfigView';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -1276,6 +1277,10 @@ Finblix AI Intraday Radar Engine`;
                 </tbody>
               </table>
             </div>
+          <div className="mt-8">
+            <WebhookConfigView symbol={symbol} />
+          </div>
+
 
             <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-slate-500 border-t border-slate-800">
               <span className="flex items-center space-x-1.5">

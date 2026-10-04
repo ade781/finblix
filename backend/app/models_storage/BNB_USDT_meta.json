@@ -1,53 +1,53 @@
 {
   "symbol": "BNB/USDT",
-  "trained_at": "2026-10-04 14:29:30 UTC",
+  "trained_at": "2026-10-04 15:46:24 UTC",
   "dataset_bars": 1499,
-  "samples_trained": 716,
-  "samples_tested": 294,
-  "training_duration_seconds": 10.21,
+  "samples_trained": 713,
+  "samples_tested": 290,
+  "training_duration_seconds": 272.52,
   "metrics": {
-    "train_accuracy_pct": 62.15,
-    "cv_5fold_mean_pct": 54.18,
-    "test_accuracy_pct": 51.7,
-    "roc_auc_pct": 51.29,
-    "hc_test_accuracy_pct": 49.47,
-    "hc_test_coverage_pct": 32.31
+    "train_accuracy_pct": 69.28,
+    "cv_5fold_mean_pct": 53.18,
+    "test_accuracy_pct": 52.07,
+    "roc_auc_pct": 49.95,
+    "hc_test_accuracy_pct": 53.19,
+    "hc_test_coverage_pct": 81.03
   },
   "top_features": [
     {
-      "feature": "ret_1d",
-      "importance": 1.501
-    },
-    {
-      "feature": "body_ratio",
-      "importance": 1.455
+      "feature": "adx_14",
+      "importance": 3.724
     },
     {
       "feature": "fng_delta",
-      "importance": 1.074
+      "importance": 1.648
+    },
+    {
+      "feature": "rolling_vol_30d",
+      "importance": 1.416
+    },
+    {
+      "feature": "ret_1d",
+      "importance": 1.34
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 1.219
     },
     {
       "feature": "obv_slope",
-      "importance": 0.516
+      "importance": 0.752
     },
     {
-      "feature": "ret_30d",
-      "importance": 0.5
+      "feature": "volume_ratio",
+      "importance": 0.632
     },
     {
-      "feature": "price_to_weekly_ema",
-      "importance": 0.484
-    },
-    {
-      "feature": "ret_7d",
-      "importance": 0.46
-    },
-    {
-      "feature": "ret_3d",
-      "importance": 0.413
+      "feature": "price_to_ema50",
+      "importance": 0.44
     }
   ],
-  "model_architecture": "hgb",
+  "model_architecture": "hgb_tuned",
   "status": "DEPLOYED_ACTIVE",
-  "is_validated": true
+  "is_validated": false
 }

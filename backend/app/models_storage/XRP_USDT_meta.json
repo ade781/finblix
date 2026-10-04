@@ -1,53 +1,53 @@
 {
   "symbol": "XRP/USDT",
-  "trained_at": "2026-10-04 14:30:28 UTC",
+  "trained_at": "2026-10-04 15:50:20 UTC",
   "dataset_bars": 1499,
-  "samples_trained": 693,
-  "samples_tested": 294,
-  "training_duration_seconds": 11.31,
+  "samples_trained": 687,
+  "samples_tested": 290,
+  "training_duration_seconds": 116.01,
   "metrics": {
-    "train_accuracy_pct": 73.74,
-    "cv_5fold_mean_pct": 52.61,
-    "test_accuracy_pct": 46.94,
-    "roc_auc_pct": 51.2,
-    "hc_test_accuracy_pct": 40.0,
-    "hc_test_coverage_pct": 8.5
+    "train_accuracy_pct": 65.79,
+    "cv_5fold_mean_pct": 56.94,
+    "test_accuracy_pct": 48.28,
+    "roc_auc_pct": 49.35,
+    "hc_test_accuracy_pct": 45.73,
+    "hc_test_coverage_pct": 56.55
   },
   "top_features": [
     {
       "feature": "price_to_weekly_ema",
-      "importance": 2.086
+      "importance": 2.558
+    },
+    {
+      "feature": "bb_width_roc",
+      "importance": 2.295
+    },
+    {
+      "feature": "rolling_vol_30d",
+      "importance": 1.46
     },
     {
       "feature": "upper_wick",
-      "importance": 1.592
+      "importance": 0.907
+    },
+    {
+      "feature": "choppiness_index",
+      "importance": 0.85
+    },
+    {
+      "feature": "rsi_macd_divergence",
+      "importance": 0.684
     },
     {
       "feature": "atr_norm",
-      "importance": 0.851
+      "importance": 0.619
     },
     {
-      "feature": "adx_14",
-      "importance": 0.629
-    },
-    {
-      "feature": "cmf_20",
-      "importance": 0.503
-    },
-    {
-      "feature": "ema9_slope",
-      "importance": 0.232
-    },
-    {
-      "feature": "bb_width",
-      "importance": 0.152
-    },
-    {
-      "feature": "ema20_to_ema50",
-      "importance": 0.144
+      "feature": "ret_30d",
+      "importance": 0.614
     }
   ],
-  "model_architecture": "hgb",
+  "model_architecture": "rf",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": false
 }
