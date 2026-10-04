@@ -1,10 +1,7 @@
 import os
-import sys
 import time
-import json
-import asyncio
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any, Tuple
 
 import numpy as np
 import pandas as pd
@@ -12,14 +9,12 @@ import joblib
 
 from sqlalchemy.orm import Session
 from app.models.asset import Asset
-from app.models.ohlcv import OHLCVBar
+from app.services.scraper_service import ScraperService
 from app.services.market_data import binance_klines, yf_history, is_crypto, is_idx, frame_to_bars, DataUnavailable
 from app.services.quant_ml import fit_direction_model, conviction_tier
-from app.services.scraper_service import ScraperService
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage")
 os.makedirs(MODELS_DIR, exist_ok=True)
-
 
 class MLTrainingEngine:
     @staticmethod
@@ -34,6 +29,7 @@ class MLTrainingEngine:
         if cls._fng_cache:
             return cls._fng_cache
         local_fng_all = os.path.join(MODELS_DIR, "fng_all.json")
+        import json
         if os.path.exists(local_fng_all):
             try:
                 with open(local_fng_all, "r", encoding="utf-8") as f:
@@ -54,13 +50,19 @@ class MLTrainingEngine:
         return {}
 
     @classmethod
-    def _compute_features_core(cls, df: pd.DataFrame, fng_map: Dict[str, float], news_map: Optional[Dict[str, float]]) -> pd.DataFrame:
+    def build_feature_dataset(
+        cls, 
+        df: pd.DataFrame, 
+        fng_map: Dict[str, float], 
+        news_map: Dict[str, float] = None,
+    ) -> Tuple[pd.DataFrame, List[str], pd.Series, pd.Series]:
+        """
+        Builds quantitative features and returns:
+        (features_df, feature_cols, fwd_ret, scale)
+        """
         df = df.copy()
-        
-        # Handle time
-        if "date_obj" not in df.columns:
-            df["date_obj"] = pd.to_datetime(df["time"], unit="s", utc=True)
-            df["date_str"] = df["date_obj"].dt.strftime("%Y-%m-%d")
+        df["date_obj"] = pd.to_datetime(df["time"], unit="s", utc=True)
+        df["date_str"] = df["date_obj"].dt.strftime("%Y-%m-%d")
 
         close = df["close"]
         high = df["high"]
@@ -159,28 +161,7 @@ class MLTrainingEngine:
 
         day_of_week = df["date_obj"].dt.weekday
         df["day_of_week"] = day_of_week / 6.0
-        
-        # Additional Advanced Daily Features
-        df["bb_width_roc"] = df["bb_width"].pct_change(3).fillna(0)
-        df["vol_roc"] = vol.pct_change(3).fillna(0).clip(-2, 5)
-        df["rsi_macd_divergence"] = (df["rsi_14"] - 50) * df["macd_hist"]
-        df["atr_ratio"] = atr14 / (tr.rolling(50).mean() + 1e-9)
-        df["trend_strength"] = (close - ema50).abs() / (atr14 + 1e-9)
 
-        return df
-
-    @classmethod
-    def build_ml_features(
-        cls, 
-        df: pd.DataFrame, 
-        fng_map: Dict[str, float], 
-        news_map: Optional[Dict[str, float]] = None,
-    ) -> Tuple[pd.DataFrame, List[str], pd.Series, pd.Series]:
-        """
-        Builds features and targets for the quant_ml engine pipeline.
-        """
-        df = cls._compute_features_core(df, fng_map, news_map)
-        
         feature_cols_all = [
             "upper_wick", "lower_wick", "body_ratio",
             "ret_1d", "ret_3d", "ret_7d", "ret_14d", "ret_30d",
@@ -190,74 +171,32 @@ class MLTrainingEngine:
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
             "choppiness_index", "cmf_20", "obv_slope", "adx_14",
             "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
-            "day_of_week", "bb_width_roc", "vol_roc", "rsi_macd_divergence",
-            "atr_ratio", "trend_strength"
+            "day_of_week"
         ]
 
-        fwd_ret = (df["close"].shift(-1) / df["close"]) - 1.0
+        # Targets
+        fwd_ret = (close.shift(-1) / close) - 1.0
         scale = df["atr_norm"]
 
         return df, feature_cols_all, fwd_ret, scale
-
-    @classmethod
-    def build_feature_dataset(
-        cls, 
-        bars: List[Dict[str, Any]], 
-        fng_map: Dict[str, float], 
-        news_map: Optional[Dict[str, float]] = None,
-        is_training: bool = True
-    ) -> pd.DataFrame:
-        """
-        Backward-compatible feature builder for legacy callers like PredictionEngine.
-        """
-        df = pd.DataFrame(bars)
-        df = cls._compute_features_core(df, fng_map, news_map)
-        
-        feature_cols_all = [
-            "upper_wick", "lower_wick", "body_ratio",
-            "ret_1d", "ret_3d", "ret_7d", "ret_14d", "ret_30d",
-            "price_to_ema20", "price_to_ema50", "ema20_to_ema50",
-            "price_to_weekly_ema", "ema9_slope",
-            "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
-            "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
-            "choppiness_index", "cmf_20", "obv_slope", "adx_14",
-            "fng_val", "fng_delta", "news_sentiment", "news_sentiment_7d",
-            "day_of_week", "bb_width_roc", "vol_roc", "rsi_macd_divergence",
-            "atr_ratio", "trend_strength"
-        ]
-        
-        if is_training:
-            df["target"] = (df["close"].shift(-1) > df["close"]).astype(int)
-            clean_df = df.dropna(subset=feature_cols_all + ["target"]).iloc[:-1].reset_index(drop=True)
-        else:
-            clean_df = df.dropna(subset=feature_cols_all).reset_index(drop=True)
-
-        return clean_df
 
     @classmethod
     async def train_model_for_asset(
         cls, 
         db: Session, 
         symbol: str, 
-        n_estimators_rf: int = 500, 
-        n_estimators_gb: int = 400,
-        n_estimators_et: int = 300,
-        bars_limit: int = 1500
     ) -> Dict[str, Any]:
-        """
-        Refactored: Uses MarketDataService and quant_ml.py leakage-safe pipeline.
-        The old hyperparams are kept in the signature for backward compatibility but ignored,
-        since candidate_models in quant_ml handles the ensemble design.
-        """
+        from typing import Any, Dict, Optional, Tuple, List
+        import json
         start_time = time.time()
+        
         slug = cls._slugify(symbol)
         
-        # 1. Disk-cached robust data ingestion
+        # 1. Unduh data historis (lewat market_data)
         if is_crypto(symbol):
-            df = binance_klines(symbol, interval="1d", lookback_bars=bars_limit)
+            df = binance_klines(symbol, interval="1d", lookback_bars=1500)
         else:
             df = yf_history(symbol, period="5y", interval="1d")
-            df = df.tail(bars_limit).reset_index(drop=True)
             
         if len(df) < 100:
             raise ValueError(f"Data historis tidak mencukupi untuk training (hanya {len(df)} bar)")
@@ -267,16 +206,17 @@ class MLTrainingEngine:
         news_sentiment_map = ScraperService.get_date_sentiment_map(db, symbol)
 
         # 3. Fitur
-        feat_df, feature_cols, fwd_ret, scale = cls.build_ml_features(df, fng_map, news_sentiment_map)
+        feat_df, feature_cols, fwd_ret, scale = cls.build_feature_dataset(df, fng_map, news_sentiment_map)
         
         # 4. Training (quant_ml)
+        # We pass feat=feat_df, candidate_cols=feature_cols, fwd_ret, scale, horizon=1
         fit_result = fit_direction_model(
             feat=feat_df,
             candidate_cols=feature_cols,
             fwd_ret=fwd_ret,
             scale=scale,
             horizon=1,
-            k_deadband=0.25, # Deadband scaling
+            k_deadband=0.2,
             test_frac=0.2,
             n_splits=5,
             max_features=15,
@@ -299,7 +239,6 @@ class MLTrainingEngine:
         model_path = os.path.join(MODELS_DIR, f"{slug}_model.joblib")
         joblib.dump(model_payload, model_path)
 
-        # Build meta to align with previous API
         meta_data = {
             "symbol": symbol,
             "trained_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
@@ -307,14 +246,7 @@ class MLTrainingEngine:
             "samples_trained": metrics.get("samples_trained"),
             "samples_tested": metrics.get("samples_tested"),
             "training_duration_seconds": duration,
-            "metrics": {
-                "train_accuracy_pct": metrics.get("train_accuracy_pct"),
-                "cv_5fold_mean_pct": metrics.get("cv_accuracy_pct"),
-                "test_accuracy_pct": metrics.get("test_accuracy_pct"),
-                "roc_auc_pct": metrics.get("test_auc_pct"),
-                "hc_test_accuracy_pct": metrics.get("hc_test_accuracy_pct"),
-                "hc_test_coverage_pct": metrics.get("hc_test_coverage_pct"),
-            },
+            "metrics": metrics,
             "top_features": fit_result["feature_ranking"][:8],
             "model_architecture": metrics.get("model_name"),
             "status": "DEPLOYED_ACTIVE",
@@ -330,6 +262,7 @@ class MLTrainingEngine:
 
     @classmethod
     def get_trained_model_status(cls, symbol: str) -> Optional[Dict[str, Any]]:
+        import json
         slug = cls._slugify(symbol)
         meta_path = os.path.join(MODELS_DIR, f"{slug}_meta.json")
         if os.path.exists(meta_path):
@@ -362,7 +295,7 @@ class MLTrainingEngine:
                 df = binance_klines(symbol, interval="1d", lookback_bars=150)
             else:
                 df = yf_history(symbol, period="1y", interval="1d")
-                df = df.tail(150).reset_index(drop=True)
+                df = df.tail(150)
                 
             if len(df) < 50:
                 return None
@@ -370,7 +303,7 @@ class MLTrainingEngine:
             fng_map = cls.load_historical_fng_series()
             news_map = ScraperService.get_date_sentiment_map(db, symbol)
             
-            feat_df, _, _, _ = cls.build_ml_features(df, fng_map, news_map)
+            feat_df, _, _, _ = cls.build_feature_dataset(df, fng_map, news_map)
             latest_features = feat_df[features].iloc[-1:].replace([np.inf, -np.inf], np.nan)
             
             if latest_features.isna().any().any():

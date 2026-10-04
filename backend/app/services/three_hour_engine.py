@@ -245,6 +245,12 @@ class ThreeHourPredictionEngine:
         mins = (df["time"] // 60) % 1440
         df["sin_time"] = np.sin(2.0 * np.pi * mins / 1440.0)
         df["cos_time"] = np.cos(2.0 * np.pi * mins / 1440.0)
+        
+        # Session Features (UTC based)
+        hours = mins / 60.0
+        df["session_asian"] = ((hours >= 0) & (hours < 8)).astype(int)
+        df["session_london"] = ((hours >= 8) & (hours < 16)).astype(int)
+        df["session_us"] = ((hours >= 13) & (hours < 21)).astype(int)
 
         df["daily_sentiment"] = daily_sentiment
 
@@ -253,6 +259,13 @@ class ThreeHourPredictionEngine:
         df["amihud_illiq"] = (df["ret_15m"].abs() / (vol * close * 1e-6 + 1e-9)).clip(upper=10.0)
         df["ofip"] = ((close - open_p) / c_range) * np.log1p(vol)
         
+        # Additional Advanced Features
+        df["bb_width_roc"] = df["bb_width"].pct_change(4).fillna(0)  # Squeeze momentum
+        df["vol_roc"] = vol.pct_change(4).fillna(0).clip(-2, 5) # Volume momentum
+        df["rsi_macd_divergence"] = (df["rsi_15m"] - 50) * df["macd_hist_15m"]
+        df["atr_ratio"] = atr14 / (tr.rolling(50).mean() + 1e-9) # Volatility regime
+        df["trend_strength"] = (close - ema50).abs() / (atr14 + 1e-9)
+
         # Compat aliases
         df["rsi_1h"] = df["rsi_15m"]
         df["cmf_12h"] = df["cmf_14"]
@@ -276,7 +289,9 @@ class ThreeHourPredictionEngine:
             "dist_ema9", "dist_ema21", "dist_ema50", "ema9_slope", "ribbon_bullish",
             "dist_vwap", "rsi_15m", "macd_hist_15m", "bb_pct_b", "bb_width",
             "vol_surge", "cmf_14", "sin_time", "cos_time", "daily_sentiment",
-            "corwin_schultz", "frac_diff_close", "amihud_illiq", "ofip"
+            "corwin_schultz", "frac_diff_close", "amihud_illiq", "ofip",
+            "bb_width_roc", "vol_roc", "rsi_macd_divergence", "atr_ratio", "trend_strength",
+            "session_asian", "session_london", "session_us"
         ]
         
         # Horizon is 12 (12 * 15m = 3h)

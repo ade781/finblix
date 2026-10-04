@@ -1,53 +1,53 @@
 {
   "symbol": "BTC/USDT",
-  "trained_at": "2026-10-04 14:28:35 UTC",
+  "trained_at": "2026-10-04 14:53:05 UTC",
   "dataset_bars": 1499,
-  "samples_trained": 694,
-  "samples_tested": 294,
-  "training_duration_seconds": 10.73,
+  "samples_trained": 689,
+  "samples_tested": 290,
+  "training_duration_seconds": 33.28,
   "metrics": {
-    "train_accuracy_pct": 77.09,
-    "cv_5fold_mean_pct": 56.39,
-    "test_accuracy_pct": 49.66,
-    "roc_auc_pct": 53.66,
-    "hc_test_accuracy_pct": 53.05,
-    "hc_test_coverage_pct": 55.78
+    "train_accuracy_pct": 71.41,
+    "cv_5fold_mean_pct": 57.24,
+    "test_accuracy_pct": 50.69,
+    "roc_auc_pct": 53.3,
+    "hc_test_accuracy_pct": 59.57,
+    "hc_test_coverage_pct": 32.41
   },
   "top_features": [
     {
       "feature": "body_ratio",
-      "importance": 2.169
+      "importance": 3.299
     },
     {
-      "feature": "upper_wick",
-      "importance": 1.665
-    },
-    {
-      "feature": "choppiness_index",
-      "importance": 1.397
+      "feature": "bb_width_roc",
+      "importance": 2.037
     },
     {
       "feature": "adx_14",
-      "importance": 0.681
+      "importance": 1.872
     },
     {
-      "feature": "atr_norm",
-      "importance": 0.381
+      "feature": "upper_wick",
+      "importance": 1.696
     },
     {
-      "feature": "price_to_ema50",
-      "importance": 0.356
+      "feature": "rsi_macd_divergence",
+      "importance": 1.469
     },
     {
-      "feature": "macd_hist",
-      "importance": 0.291
+      "feature": "trend_strength",
+      "importance": 1.373
     },
     {
-      "feature": "obv_slope",
-      "importance": 0.234
+      "feature": "ret_1d",
+      "importance": 1.117
+    },
+    {
+      "feature": "macd_accel",
+      "importance": 1.104
     }
   ],
-  "model_architecture": "hgb",
+  "model_architecture": "soft_vote",
   "status": "DEPLOYED_ACTIVE",
-  "is_validated": false
+  "is_validated": true
 }

@@ -96,19 +96,68 @@ def fit_platt(raw_p: np.ndarray, y: np.ndarray) -> Tuple[float, float]:
 
 
 def candidate_models(n_train: int, random_state: int = 42) -> Dict[str, Any]:
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.feature_selection import SelectFromModel
+    
     leaf = int(max(30, n_train // 60))
-    logreg = make_pipeline(RobustScaler(), LogisticRegression(C=0.05, max_iter=3000))
-    hgb = HistGradientBoostingClassifier(
-        learning_rate=0.03, max_iter=150, max_depth=3, max_leaf_nodes=8,
-        min_samples_leaf=leaf, l2_regularization=5.0, early_stopping=False,
-        random_state=random_state,
+    # Use class_weight='balanced' to handle imbalanced long/short trades
+    logreg = make_pipeline(RobustScaler(), LogisticRegression(C=0.05, max_iter=3000, class_weight='balanced'))
+    
+    # Base HGB
+    hgb_base = HistGradientBoostingClassifier(
+        max_iter=200, early_stopping=False, random_state=random_state, class_weight='balanced'
     )
-    rf = RandomForestClassifier(
+    
+    # Hyperparameter search space for HGB
+    param_dist = {
+        'learning_rate': [0.01, 0.03, 0.05, 0.1],
+        'max_depth': [3, 4, 5, 7],
+        'max_leaf_nodes': [8, 15, 31],
+        'min_samples_leaf': [leaf, max(10, leaf//2), leaf*2],
+        'l2_regularization': [0.0, 1.0, 5.0, 10.0]
+    }
+    
+    # RandomizedSearchCV to find optimal parameters within candidate selection
+    tuned_hgb = RandomizedSearchCV(
+        hgb_base, param_distributions=param_dist, n_iter=8, 
+        cv=3, scoring='roc_auc', n_jobs=1, random_state=random_state
+    )
+    
+    # Use Feature Selection + RandomForest to filter out noisy features
+    rf_base = RandomForestClassifier(
         n_estimators=300, max_depth=4, min_samples_leaf=leaf, max_features="sqrt",
-        n_jobs=-1, random_state=random_state,
+        n_jobs=1, random_state=random_state, class_weight='balanced'
     )
-    vote = VotingClassifier([("lr", clone(logreg)), ("hgb", clone(hgb)), ("rf", clone(rf))], voting="soft")
-    return {"logreg": logreg, "hgb": hgb, "rf": rf, "soft_vote": vote}
+    
+    # The pipeline will first drop useless features using a meta-RF, then train the actual RF
+    rf = make_pipeline(
+        SelectFromModel(RandomForestClassifier(n_estimators=50, random_state=random_state, n_jobs=1)),
+        rf_base
+    )
+    
+    # Simple hardcoded HGB as fallback
+    hgb_simple = HistGradientBoostingClassifier(
+        learning_rate=0.03, max_iter=150, max_depth=3, max_leaf_nodes=8,
+        min_samples_leaf=leaf, l2_regularization=5.0, random_state=random_state,
+        class_weight='balanced'
+    )
+
+    vote = VotingClassifier([("lr", clone(logreg)), ("hgb", clone(hgb_simple)), ("rf", clone(rf))], voting="soft")
+    
+    from sklearn.ensemble import StackingClassifier
+    stacking = StackingClassifier(
+        estimators=[("lr", clone(logreg)), ("hgb", clone(hgb_simple)), ("rf", clone(rf))],
+        final_estimator=LogisticRegression(C=0.1),
+        cv=3, n_jobs=1
+    )
+    
+    return {
+        "logreg": logreg, 
+        "hgb_tuned": tuned_hgb, 
+        "rf": rf, 
+        "soft_vote": vote,
+        "stacking": stacking
+    }
 
 
 def _safe_auc(y, p) -> float:

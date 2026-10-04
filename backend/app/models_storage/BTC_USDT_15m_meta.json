@@ -2,50 +2,50 @@
   "symbol": "BTC/USDT",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "dataset_bars": 16999,
-  "samples_trained": 9004,
-  "samples_tested": 3394,
-  "test_accuracy_pct": 53.98,
-  "cv_accuracy_pct": 53.19,
-  "roc_auc_pct": 54.81,
-  "hc_test_accuracy_pct": 59.37,
-  "hc_test_coverage_pct": 15.88,
+  "dataset_bars": 17000,
+  "samples_trained": 8996,
+  "samples_tested": 3388,
+  "test_accuracy_pct": 53.34,
+  "cv_accuracy_pct": 55.18,
+  "roc_auc_pct": 54.98,
+  "hc_test_accuracy_pct": 59.87,
+  "hc_test_coverage_pct": 18.39,
   "top_features": [
     {
-      "feature": "macd_hist_15m",
-      "importance": 1.185
+      "feature": "dist_vwap",
+      "importance": 1.452
     },
     {
-      "feature": "dist_vwap",
-      "importance": 1.095
+      "feature": "macd_hist_15m",
+      "importance": 1.117
     },
     {
       "feature": "bb_width",
-      "importance": 0.907
-    },
-    {
-      "feature": "dist_ema50",
-      "importance": 0.725
-    },
-    {
-      "feature": "sin_time",
-      "importance": 0.608
+      "importance": 1.044
     },
     {
       "feature": "cos_time",
-      "importance": 0.602
+      "importance": 0.783
     },
     {
-      "feature": "frac_diff_close",
-      "importance": 0.595
+      "feature": "dist_ema50",
+      "importance": 0.659
     },
     {
       "feature": "dist_ema21",
-      "importance": 0.414
+      "importance": 0.388
+    },
+    {
+      "feature": "ret_3h",
+      "importance": 0.362
+    },
+    {
+      "feature": "atr_norm",
+      "importance": 0.312
     }
   ],
-  "duration_seconds": 17.34,
-  "trained_at": "2026-10-04 14:28:53 UTC",
+  "duration_seconds": 86.93,
+  "trained_at": "2026-10-04 14:52:31 UTC",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": true
 }
