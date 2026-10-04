@@ -1,0 +1,53 @@
+{
+  "symbol": "SOL/USDT",
+  "trained_at": "2026-10-04 14:30:00 UTC",
+  "dataset_bars": 1499,
+  "samples_trained": 760,
+  "samples_tested": 294,
+  "training_duration_seconds": 14.46,
+  "metrics": {
+    "train_accuracy_pct": 69.74,
+    "cv_5fold_mean_pct": 53.96,
+    "test_accuracy_pct": 50.0,
+    "roc_auc_pct": 50.3,
+    "hc_test_accuracy_pct": 52.44,
+    "hc_test_coverage_pct": 55.78
+  },
+  "top_features": [
+    {
+      "feature": "upper_wick",
+      "importance": 3.749
+    },
+    {
+      "feature": "rsi_14",
+      "importance": 1.166
+    },
+    {
+      "feature": "obv_slope",
+      "importance": 1.164
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.903
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 0.824
+    },
+    {
+      "feature": "ret_7d",
+      "importance": 0.796
+    },
+    {
+      "feature": "fng_delta",
+      "importance": 0.526
+    },
+    {
+      "feature": "bb_width",
+      "importance": 0.524
+    }
+  ],
+  "model_architecture": "rf",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
+}

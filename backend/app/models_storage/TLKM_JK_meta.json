@@ -1,54 +1,53 @@
 {
   "symbol": "TLKM.JK",
-  "trained_at": "2026-10-03 18:19:52 UTC",
-  "dataset_bars": 719,
-  "samples_trained": 550,
-  "samples_tested": 138,
-  "training_duration_seconds": 2.83,
+  "trained_at": "2026-10-04 14:32:33 UTC",
+  "dataset_bars": 1204,
+  "samples_trained": 621,
+  "samples_tested": 235,
+  "training_duration_seconds": 9.15,
   "metrics": {
-    "train_accuracy_pct": 94.91,
-    "cv_5fold_mean_pct": 49.45,
-    "cv_5fold_std_pct": 4.23,
-    "test_accuracy_pct": 59.42,
-    "precision_pct": 50.0,
-    "recall_pct": 46.43,
-    "f1_score_pct": 48.15,
-    "roc_auc_pct": 58.45
+    "train_accuracy_pct": 76.65,
+    "cv_5fold_mean_pct": 52.55,
+    "test_accuracy_pct": 48.94,
+    "roc_auc_pct": 50.08,
+    "hc_test_accuracy_pct": 46.67,
+    "hc_test_coverage_pct": 25.53
   },
   "top_features": [
     {
-      "feature": "cmf_20",
-      "importance": 6.05
+      "feature": "ret_7d",
+      "importance": 2.458
     },
     {
       "feature": "obv_slope",
-      "importance": 5.74
-    },
-    {
-      "feature": "ret_7d",
-      "importance": 4.99
-    },
-    {
-      "feature": "macd_hist",
-      "importance": 4.61
-    },
-    {
-      "feature": "price_to_ema20",
-      "importance": 3.9
-    },
-    {
-      "feature": "rsi_delta",
-      "importance": 3.87
-    },
-    {
-      "feature": "lower_wick",
-      "importance": 3.7
+      "importance": 1.991
     },
     {
       "feature": "ret_1d",
-      "importance": 3.43
+      "importance": 1.548
+    },
+    {
+      "feature": "fng_val",
+      "importance": 1.5
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 1.497
+    },
+    {
+      "feature": "volume_ratio",
+      "importance": 0.789
+    },
+    {
+      "feature": "fng_delta",
+      "importance": 0.543
+    },
+    {
+      "feature": "ema20_to_ema50",
+      "importance": 0.498
     }
   ],
-  "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",
-  "status": "DEPLOYED_ACTIVE"
+  "model_architecture": "hgb",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

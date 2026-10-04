@@ -1,54 +1,53 @@
 {
   "symbol": "BMRI.JK",
-  "trained_at": "2026-10-03 18:19:49 UTC",
-  "dataset_bars": 719,
-  "samples_trained": 550,
-  "samples_tested": 138,
-  "training_duration_seconds": 2.41,
+  "trained_at": "2026-10-04 14:31:44 UTC",
+  "dataset_bars": 1204,
+  "samples_trained": 599,
+  "samples_tested": 235,
+  "training_duration_seconds": 14.34,
   "metrics": {
-    "train_accuracy_pct": 91.27,
-    "cv_5fold_mean_pct": 52.31,
-    "cv_5fold_std_pct": 7.76,
-    "test_accuracy_pct": 52.9,
-    "precision_pct": 37.5,
-    "recall_pct": 33.96,
-    "f1_score_pct": 35.64,
-    "roc_auc_pct": 49.12
+    "train_accuracy_pct": 68.11,
+    "cv_5fold_mean_pct": 55.18,
+    "test_accuracy_pct": 52.77,
+    "roc_auc_pct": 51.89,
+    "hc_test_accuracy_pct": 54.69,
+    "hc_test_coverage_pct": 27.23
   },
   "top_features": [
     {
-      "feature": "news_sentiment",
-      "importance": 4.63
+      "feature": "rsi_delta",
+      "importance": 3.015
     },
     {
-      "feature": "fng_val",
-      "importance": 4.63
+      "feature": "macd_accel",
+      "importance": 1.59
+    },
+    {
+      "feature": "volume_ratio",
+      "importance": 0.819
+    },
+    {
+      "feature": "upper_wick",
+      "importance": 0.783
+    },
+    {
+      "feature": "ema9_slope",
+      "importance": 0.547
+    },
+    {
+      "feature": "ret_7d",
+      "importance": 0.441
     },
     {
       "feature": "news_sentiment_7d",
-      "importance": 4.34
-    },
-    {
-      "feature": "fng_delta",
-      "importance": 4.24
-    },
-    {
-      "feature": "body_ratio",
-      "importance": 4.04
+      "importance": 0.36
     },
     {
       "feature": "ret_1d",
-      "importance": 4.03
-    },
-    {
-      "feature": "rsi_14",
-      "importance": 3.99
-    },
-    {
-      "feature": "adx_14",
-      "importance": 3.82
+      "importance": 0.314
     }
   ],
-  "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",
-  "status": "DEPLOYED_ACTIVE"
+  "model_architecture": "rf",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

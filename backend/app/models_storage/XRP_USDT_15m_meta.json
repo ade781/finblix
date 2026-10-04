@@ -2,13 +2,50 @@
   "symbol": "XRP/USDT",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "samples_trained": 535,
-  "samples_tested": 134,
-  "test_accuracy_pct": 55.22,
-  "meta_accuracy_pct": 58.21,
-  "cv_accuracy_pct": 58.4,
-  "roc_auc_pct": 46.96,
-  "duration_seconds": 1.93,
-  "features_count": 32,
-  "trained_at": "2026-10-04 04:39:28 UTC"
+  "dataset_bars": 16999,
+  "samples_trained": 8715,
+  "samples_tested": 3394,
+  "test_accuracy_pct": 49.06,
+  "cv_accuracy_pct": 54.14,
+  "roc_auc_pct": 48.56,
+  "hc_test_accuracy_pct": 48.7,
+  "hc_test_coverage_pct": 45.2,
+  "top_features": [
+    {
+      "feature": "cos_time",
+      "importance": 1.917
+    },
+    {
+      "feature": "dist_ema50",
+      "importance": 1.285
+    },
+    {
+      "feature": "frac_diff_close",
+      "importance": 1.201
+    },
+    {
+      "feature": "bb_width",
+      "importance": 0.885
+    },
+    {
+      "feature": "macd_hist_15m",
+      "importance": 0.603
+    },
+    {
+      "feature": "dist_vwap",
+      "importance": 0.557
+    },
+    {
+      "feature": "cmf_14",
+      "importance": 0.489
+    },
+    {
+      "feature": "dist_ema21",
+      "importance": 0.211
+    }
+  ],
+  "duration_seconds": 17.07,
+  "trained_at": "2026-10-04 14:30:45 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

@@ -2,13 +2,50 @@
   "symbol": "BBCA.JK",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "samples_trained": 489,
-  "samples_tested": 123,
-  "test_accuracy_pct": 71.54,
-  "meta_accuracy_pct": 80.49,
-  "cv_accuracy_pct": 50.27,
-  "roc_auc_pct": 54.25,
-  "duration_seconds": 1.92,
-  "features_count": 32,
-  "trained_at": "2026-10-04 04:39:30 UTC"
+  "dataset_bars": 1286,
+  "samples_trained": 553,
+  "samples_tested": 251,
+  "test_accuracy_pct": 25.1,
+  "cv_accuracy_pct": 51.48,
+  "roc_auc_pct": 55.55,
+  "hc_test_accuracy_pct": 36.84,
+  "hc_test_coverage_pct": 22.71,
+  "top_features": [
+    {
+      "feature": "dist_ema50",
+      "importance": 7.134
+    },
+    {
+      "feature": "parkinson_vol",
+      "importance": 2.863
+    },
+    {
+      "feature": "corwin_schultz",
+      "importance": 1.833
+    },
+    {
+      "feature": "atr_norm",
+      "importance": 1.102
+    },
+    {
+      "feature": "lower_wick",
+      "importance": 0.997
+    },
+    {
+      "feature": "dist_ema21",
+      "importance": 0.984
+    },
+    {
+      "feature": "cos_time",
+      "importance": 0.717
+    },
+    {
+      "feature": "ret_3h",
+      "importance": 0.683
+    }
+  ],
+  "duration_seconds": 11.13,
+  "trained_at": "2026-10-04 14:31:08 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

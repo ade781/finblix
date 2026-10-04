@@ -1,54 +1,53 @@
 {
   "symbol": "ETH/USDT",
-  "trained_at": "2026-10-03 18:19:38 UTC",
-  "dataset_bars": 1000,
-  "samples_trained": 775,
-  "samples_tested": 194,
-  "training_duration_seconds": 6.88,
+  "trained_at": "2026-10-04 14:29:03 UTC",
+  "dataset_bars": 1499,
+  "samples_trained": 692,
+  "samples_tested": 294,
+  "training_duration_seconds": 10.51,
   "metrics": {
-    "train_accuracy_pct": 94.97,
-    "cv_5fold_mean_pct": 52.25,
-    "cv_5fold_std_pct": 3.38,
-    "test_accuracy_pct": 48.97,
-    "precision_pct": 52.34,
-    "recall_pct": 53.85,
-    "f1_score_pct": 53.08,
-    "roc_auc_pct": 50.35
+    "train_accuracy_pct": 75.43,
+    "cv_5fold_mean_pct": 56.87,
+    "test_accuracy_pct": 53.4,
+    "roc_auc_pct": 51.45,
+    "hc_test_accuracy_pct": 42.86,
+    "hc_test_coverage_pct": 4.76
   },
   "top_features": [
     {
-      "feature": "day_of_week",
-      "importance": 6.75
-    },
-    {
-      "feature": "adx_14",
-      "importance": 5.26
-    },
-    {
-      "feature": "macd_hist",
-      "importance": 4.15
-    },
-    {
       "feature": "ret_3d",
-      "importance": 4.07
+      "importance": 2.372
     },
     {
-      "feature": "cmf_20",
-      "importance": 4.06
+      "feature": "rsi_delta",
+      "importance": 1.036
     },
     {
-      "feature": "choppiness_index",
-      "importance": 4.03
-    },
-    {
-      "feature": "upper_wick",
-      "importance": 3.86
+      "feature": "ret_1d",
+      "importance": 0.766
     },
     {
       "feature": "atr_norm",
-      "importance": 3.78
+      "importance": 0.722
+    },
+    {
+      "feature": "ret_30d",
+      "importance": 0.684
+    },
+    {
+      "feature": "day_of_week",
+      "importance": 0.508
+    },
+    {
+      "feature": "price_to_ema50",
+      "importance": 0.285
+    },
+    {
+      "feature": "bb_width",
+      "importance": 0.273
     }
   ],
-  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest + Gradient Boosting + Extra Trees)",
-  "status": "DEPLOYED_ACTIVE"
+  "model_architecture": "hgb",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": true
 }

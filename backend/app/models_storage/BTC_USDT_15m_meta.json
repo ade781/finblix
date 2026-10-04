@@ -2,13 +2,50 @@
   "symbol": "BTC/USDT",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "samples_trained": 535,
-  "samples_tested": 134,
-  "test_accuracy_pct": 53.73,
-  "meta_accuracy_pct": 59.7,
-  "cv_accuracy_pct": 58.9,
-  "roc_auc_pct": 57.5,
-  "duration_seconds": 2.98,
-  "features_count": 32,
-  "trained_at": "2026-10-04 04:39:21 UTC"
+  "dataset_bars": 16999,
+  "samples_trained": 9004,
+  "samples_tested": 3394,
+  "test_accuracy_pct": 53.98,
+  "cv_accuracy_pct": 53.19,
+  "roc_auc_pct": 54.81,
+  "hc_test_accuracy_pct": 59.37,
+  "hc_test_coverage_pct": 15.88,
+  "top_features": [
+    {
+      "feature": "macd_hist_15m",
+      "importance": 1.185
+    },
+    {
+      "feature": "dist_vwap",
+      "importance": 1.095
+    },
+    {
+      "feature": "bb_width",
+      "importance": 0.907
+    },
+    {
+      "feature": "dist_ema50",
+      "importance": 0.725
+    },
+    {
+      "feature": "sin_time",
+      "importance": 0.608
+    },
+    {
+      "feature": "cos_time",
+      "importance": 0.602
+    },
+    {
+      "feature": "frac_diff_close",
+      "importance": 0.595
+    },
+    {
+      "feature": "dist_ema21",
+      "importance": 0.414
+    }
+  ],
+  "duration_seconds": 17.34,
+  "trained_at": "2026-10-04 14:28:53 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": true
 }

@@ -1,54 +1,53 @@
 {
   "symbol": "BBCA.JK",
-  "trained_at": "2026-10-03 18:19:43 UTC",
-  "dataset_bars": 718,
-  "samples_trained": 549,
-  "samples_tested": 138,
-  "training_duration_seconds": 4.96,
+  "trained_at": "2026-10-04 14:30:56 UTC",
+  "dataset_bars": 1203,
+  "samples_trained": 649,
+  "samples_tested": 235,
+  "training_duration_seconds": 11.06,
   "metrics": {
-    "train_accuracy_pct": 91.26,
-    "cv_5fold_mean_pct": 58.68,
-    "cv_5fold_std_pct": 3.45,
-    "test_accuracy_pct": 61.59,
-    "precision_pct": 56.0,
-    "recall_pct": 47.46,
-    "f1_score_pct": 51.38,
-    "roc_auc_pct": 61.7
+    "train_accuracy_pct": 68.88,
+    "cv_5fold_mean_pct": 56.68,
+    "test_accuracy_pct": 59.15,
+    "roc_auc_pct": 57.92,
+    "hc_test_accuracy_pct": 56.25,
+    "hc_test_coverage_pct": 6.81
   },
   "top_features": [
     {
-      "feature": "macd_accel",
-      "importance": 5.87
-    },
-    {
-      "feature": "ema20_to_ema50",
-      "importance": 4.96
-    },
-    {
-      "feature": "price_to_ema50",
-      "importance": 4.93
-    },
-    {
-      "feature": "price_to_weekly_ema",
-      "importance": 4.89
-    },
-    {
       "feature": "lower_wick",
-      "importance": 4.25
+      "importance": 2.266
+    },
+    {
+      "feature": "ret_14d",
+      "importance": 1.688
+    },
+    {
+      "feature": "upper_wick",
+      "importance": 1.51
     },
     {
       "feature": "ret_1d",
-      "importance": 4.24
+      "importance": 1.088
     },
     {
-      "feature": "atr_norm",
-      "importance": 3.97
+      "feature": "ema20_to_ema50",
+      "importance": 0.797
     },
     {
-      "feature": "macd_hist",
-      "importance": 3.93
+      "feature": "price_to_ema50",
+      "importance": 0.535
+    },
+    {
+      "feature": "price_to_weekly_ema",
+      "importance": 0.531
+    },
+    {
+      "feature": "bb_percent_b",
+      "importance": 0.445
     }
   ],
-  "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",
-  "status": "DEPLOYED_ACTIVE"
+  "model_architecture": "hgb",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": true
 }

@@ -2,13 +2,50 @@
   "symbol": "ASII.JK",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "samples_trained": 489,
-  "samples_tested": 123,
-  "test_accuracy_pct": 47.15,
-  "meta_accuracy_pct": 52.85,
-  "cv_accuracy_pct": 51.37,
-  "roc_auc_pct": 47.14,
-  "duration_seconds": 1.18,
-  "features_count": 32,
-  "trained_at": "2026-10-04 04:39:36 UTC"
+  "dataset_bars": 1286,
+  "samples_trained": 610,
+  "samples_tested": 251,
+  "test_accuracy_pct": 73.71,
+  "cv_accuracy_pct": 43.88,
+  "roc_auc_pct": 66.42,
+  "hc_test_accuracy_pct": 80.0,
+  "hc_test_coverage_pct": 5.98,
+  "top_features": [
+    {
+      "feature": "macd_hist_15m",
+      "importance": 4.229
+    },
+    {
+      "feature": "cos_time",
+      "importance": 3.602
+    },
+    {
+      "feature": "dist_ema50",
+      "importance": 1.54
+    },
+    {
+      "feature": "dist_ema21",
+      "importance": 1.533
+    },
+    {
+      "feature": "rsi_15m",
+      "importance": 1.51
+    },
+    {
+      "feature": "vol_surge",
+      "importance": 1.309
+    },
+    {
+      "feature": "corwin_schultz",
+      "importance": 1.075
+    },
+    {
+      "feature": "atr_norm",
+      "importance": 0.959
+    }
+  ],
+  "duration_seconds": 11.42,
+  "trained_at": "2026-10-04 14:32:24 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

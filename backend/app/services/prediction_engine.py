@@ -163,17 +163,16 @@ class DailyPredictionEngine:
             composite = (tech_score * 0.65) + (fund_score * 0.35)
 
         # Anti-Noise Deadband Filter: Cegah flip-flop acak saat pasar bimbang
-        if abs(composite) < 2.5:
-            if p_close > p_open and lower_wick >= upper_wick:
-                composite = 3.5
-            elif p_close < p_open and upper_wick >= lower_wick:
-                composite = -3.5
-            else:
-                composite = 3.5 if weekly_trend == "BULLISH" else -3.5
-
-        direction = "NAIK" if composite >= 0 else "TURUN"
-        confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
+        if abs(composite) < 3.0:
+            direction = "KONSOLIDASI"
+            confidence = 50.0
+        else:
+            direction = "NAIK" if composite >= 0 else "TURUN"
+            confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
+            
         mtf_confluence = "PRO_TREND" if ((direction == "NAIK" and weekly_trend == "BULLISH") or (direction == "TURUN" and weekly_trend == "BEARISH")) else "COUNTER_TREND"
+        if direction == "KONSOLIDASI":
+            mtf_confluence = "NEUTRAL"
 
         return {
             "direction": direction,
@@ -384,16 +383,15 @@ class DailyPredictionEngine:
 
         # Anti-Noise Deadband Filter: Cegah flip-flop acak saat pasar bimbang
         if abs(composite) < 3.0:
-            if p_close > p_open and lower_wick >= upper_wick:
-                composite = 3.5
-            elif p_close < p_open and upper_wick >= lower_wick:
-                composite = -3.5
-            else:
-                composite = 3.5 if weekly_trend == "BULLISH" else -3.5
-
-        direction = "NAIK" if composite >= 0 else "TURUN"
-        confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
+            direction = "KONSOLIDASI"
+            confidence = 50.0
+        else:
+            direction = "NAIK" if composite >= 0 else "TURUN"
+            confidence = round(min(90.0, max(52.0, 50.0 + abs(composite) * 0.40)), 1)
+            
         mtf_confluence = "PRO_TREND" if ((direction == "NAIK" and weekly_trend == "BULLISH") or (direction == "TURUN" and weekly_trend == "BEARISH")) else "COUNTER_TREND"
+        if direction == "KONSOLIDASI":
+            mtf_confluence = "NEUTRAL"
 
         return {
             "direction": direction,
@@ -509,7 +507,12 @@ class DailyPredictionEngine:
         prediction_direction = q_res["direction"]
         confidence = q_res["confidence"]
         composite_score = q_res["composite"]
-        prediction_label = "BULLISH (UP)" if prediction_direction == "NAIK" else "BEARISH (DOWN)"
+        if prediction_direction == "NAIK":
+            prediction_label = "BULLISH (UP)"
+        elif prediction_direction == "TURUN":
+            prediction_label = "BEARISH (DOWN)"
+        else:
+            prediction_label = "SIDEWAYS (NO-TRADE)"
 
         # 6. Klasifikasi Conviction & Rekomendasi Eksekusi Berbasis Multi-Timeframe
         abs_comp = abs(composite_score)
@@ -693,7 +696,11 @@ class DailyPredictionEngine:
             else:
                 day_conviction = "LOW"
 
-            is_correct = (predicted_dir == actual_direction)
+            is_correct = False
+            if predicted_dir == "KONSOLIDASI":
+                is_correct = (abs(actual_change) < 0.5)
+            else:
+                is_correct = (predicted_dir == actual_direction)
             if is_correct:
                 correct += 1
             total += 1

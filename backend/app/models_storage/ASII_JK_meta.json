@@ -1,0 +1,53 @@
+{
+  "symbol": "ASII.JK",
+  "trained_at": "2026-10-04 14:32:12 UTC",
+  "dataset_bars": 1204,
+  "samples_trained": 615,
+  "samples_tested": 235,
+  "training_duration_seconds": 17.08,
+  "metrics": {
+    "train_accuracy_pct": 71.06,
+    "cv_5fold_mean_pct": 56.99,
+    "test_accuracy_pct": 57.87,
+    "roc_auc_pct": 61.42,
+    "hc_test_accuracy_pct": 63.76,
+    "hc_test_coverage_pct": 63.4
+  },
+  "top_features": [
+    {
+      "feature": "ret_1d",
+      "importance": 2.41
+    },
+    {
+      "feature": "macd_accel",
+      "importance": 1.475
+    },
+    {
+      "feature": "body_ratio",
+      "importance": 1.182
+    },
+    {
+      "feature": "adx_14",
+      "importance": 1.081
+    },
+    {
+      "feature": "fng_delta",
+      "importance": 0.791
+    },
+    {
+      "feature": "rsi_14",
+      "importance": 0.631
+    },
+    {
+      "feature": "ret_3d",
+      "importance": 0.506
+    },
+    {
+      "feature": "volume_ratio",
+      "importance": 0.432
+    }
+  ],
+  "model_architecture": "soft_vote",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": true
+}

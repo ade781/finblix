@@ -1,0 +1,51 @@
+{
+  "symbol": "AAPL",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "dataset_bars": 1560,
+  "samples_trained": 780,
+  "samples_tested": 306,
+  "test_accuracy_pct": 51.96,
+  "cv_accuracy_pct": 54.8,
+  "roc_auc_pct": 43.14,
+  "hc_test_accuracy_pct": 49.21,
+  "hc_test_coverage_pct": 20.59,
+  "top_features": [
+    {
+      "feature": "frac_diff_close",
+      "importance": 0.735
+    },
+    {
+      "feature": "dist_ema50",
+      "importance": 0.613
+    },
+    {
+      "feature": "ret_1h",
+      "importance": 0.462
+    },
+    {
+      "feature": "bb_pct_b",
+      "importance": 0.412
+    },
+    {
+      "feature": "ofip",
+      "importance": 0.356
+    },
+    {
+      "feature": "ret_45m",
+      "importance": 0.196
+    },
+    {
+      "feature": "amihud_illiq",
+      "importance": 0.188
+    },
+    {
+      "feature": "upper_wick",
+      "importance": 0.134
+    }
+  ],
+  "duration_seconds": 9.11,
+  "trained_at": "2026-10-04 14:33:03 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
+}

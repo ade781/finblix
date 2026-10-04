@@ -1,54 +1,53 @@
 {
   "symbol": "BTC/USDT",
-  "trained_at": "2026-10-03 18:22:23 UTC",
-  "dataset_bars": 1000,
-  "samples_trained": 775,
-  "samples_tested": 194,
-  "training_duration_seconds": 10.41,
+  "trained_at": "2026-10-04 14:28:35 UTC",
+  "dataset_bars": 1499,
+  "samples_trained": 694,
+  "samples_tested": 294,
+  "training_duration_seconds": 10.73,
   "metrics": {
-    "train_accuracy_pct": 98.58,
-    "cv_5fold_mean_pct": 52.25,
-    "cv_5fold_std_pct": 2.43,
-    "test_accuracy_pct": 51.03,
-    "precision_pct": 52.04,
-    "recall_pct": 51.52,
-    "f1_score_pct": 51.78,
-    "roc_auc_pct": 53.1
+    "train_accuracy_pct": 77.09,
+    "cv_5fold_mean_pct": 56.39,
+    "test_accuracy_pct": 49.66,
+    "roc_auc_pct": 53.66,
+    "hc_test_accuracy_pct": 53.05,
+    "hc_test_coverage_pct": 55.78
   },
   "top_features": [
     {
+      "feature": "body_ratio",
+      "importance": 2.169
+    },
+    {
       "feature": "upper_wick",
-      "importance": 6.8
-    },
-    {
-      "feature": "obv_slope",
-      "importance": 5.41
-    },
-    {
-      "feature": "adx_14",
-      "importance": 4.77
-    },
-    {
-      "feature": "ret_30d",
-      "importance": 4.69
-    },
-    {
-      "feature": "fng_delta",
-      "importance": 4.37
-    },
-    {
-      "feature": "cmf_20",
-      "importance": 3.91
+      "importance": 1.665
     },
     {
       "feature": "choppiness_index",
-      "importance": 3.9
+      "importance": 1.397
     },
     {
-      "feature": "ret_1d",
-      "importance": 3.75
+      "feature": "adx_14",
+      "importance": 0.681
+    },
+    {
+      "feature": "atr_norm",
+      "importance": 0.381
+    },
+    {
+      "feature": "price_to_ema50",
+      "importance": 0.356
+    },
+    {
+      "feature": "macd_hist",
+      "importance": 0.291
+    },
+    {
+      "feature": "obv_slope",
+      "importance": 0.234
     }
   ],
-  "model_architecture": "Tri-Model Soft Voting Ensemble (Random Forest + Gradient Boosting + Extra Trees)",
-  "status": "DEPLOYED_ACTIVE"
+  "model_architecture": "hgb",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

@@ -1,54 +1,53 @@
 {
   "symbol": "BBRI.JK",
-  "trained_at": "2026-10-03 18:19:46 UTC",
-  "dataset_bars": 719,
-  "samples_trained": 550,
-  "samples_tested": 138,
-  "training_duration_seconds": 2.93,
+  "trained_at": "2026-10-04 14:31:20 UTC",
+  "dataset_bars": 1204,
+  "samples_trained": 660,
+  "samples_tested": 235,
+  "training_duration_seconds": 12.17,
   "metrics": {
-    "train_accuracy_pct": 94.0,
-    "cv_5fold_mean_pct": 52.75,
-    "cv_5fold_std_pct": 4.45,
-    "test_accuracy_pct": 49.28,
-    "precision_pct": 40.0,
-    "recall_pct": 37.29,
-    "f1_score_pct": 38.6,
-    "roc_auc_pct": 49.54
+    "train_accuracy_pct": 64.09,
+    "cv_5fold_mean_pct": 56.96,
+    "test_accuracy_pct": 52.34,
+    "roc_auc_pct": 49.35,
+    "hc_test_accuracy_pct": 52.34,
+    "hc_test_coverage_pct": 91.06
   },
   "top_features": [
     {
-      "feature": "news_sentiment_7d",
-      "importance": 4.9
-    },
-    {
-      "feature": "lower_wick",
-      "importance": 4.59
-    },
-    {
-      "feature": "fng_delta",
-      "importance": 4.44
-    },
-    {
       "feature": "ret_1d",
-      "importance": 4.28
+      "importance": 2.204
     },
     {
       "feature": "cmf_20",
-      "importance": 4.23
+      "importance": 0.711
     },
     {
-      "feature": "body_ratio",
-      "importance": 3.93
+      "feature": "macd_accel",
+      "importance": 0.424
     },
     {
-      "feature": "macd_hist",
-      "importance": 3.78
+      "feature": "ret_14d",
+      "importance": 0.22
     },
     {
-      "feature": "upper_wick",
-      "importance": 3.63
+      "feature": "fng_val",
+      "importance": 0.204
+    },
+    {
+      "feature": "price_to_ema50",
+      "importance": 0.167
+    },
+    {
+      "feature": "volume_ratio",
+      "importance": 0.063
+    },
+    {
+      "feature": "bb_width",
+      "importance": 0.061
     }
   ],
-  "model_architecture": "Quad-Learner Neural-Tree Hybrid (Random Forest + HistGradientBoosting + MLP Neural Network + Extra Trees)",
-  "status": "DEPLOYED_ACTIVE"
+  "model_architecture": "rf",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }

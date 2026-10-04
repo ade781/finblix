@@ -2,13 +2,50 @@
   "symbol": "SOL/USDT",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "samples_trained": 535,
-  "samples_tested": 134,
-  "test_accuracy_pct": 68.66,
-  "meta_accuracy_pct": 59.7,
-  "cv_accuracy_pct": 47.62,
-  "roc_auc_pct": 48.63,
-  "duration_seconds": 1.73,
-  "features_count": 32,
-  "trained_at": "2026-10-04 04:39:25 UTC"
+  "dataset_bars": 16999,
+  "samples_trained": 8755,
+  "samples_tested": 3394,
+  "test_accuracy_pct": 51.86,
+  "cv_accuracy_pct": 52.88,
+  "roc_auc_pct": 51.67,
+  "hc_test_accuracy_pct": 70.63,
+  "hc_test_coverage_pct": 3.71,
+  "top_features": [
+    {
+      "feature": "macd_hist_15m",
+      "importance": 0.968
+    },
+    {
+      "feature": "cmf_14",
+      "importance": 0.846
+    },
+    {
+      "feature": "frac_diff_close",
+      "importance": 0.829
+    },
+    {
+      "feature": "dist_ema21",
+      "importance": 0.368
+    },
+    {
+      "feature": "rsi_15m",
+      "importance": 0.225
+    },
+    {
+      "feature": "ret_2h",
+      "importance": 0.218
+    },
+    {
+      "feature": "cos_time",
+      "importance": 0.107
+    },
+    {
+      "feature": "sin_time",
+      "importance": 0.104
+    }
+  ],
+  "duration_seconds": 16.81,
+  "trained_at": "2026-10-04 14:30:17 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": true
 }

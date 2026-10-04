@@ -2,13 +2,50 @@
   "symbol": "BBRI.JK",
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
-  "samples_trained": 489,
-  "samples_tested": 123,
-  "test_accuracy_pct": 50.41,
-  "meta_accuracy_pct": 74.8,
-  "cv_accuracy_pct": 44.26,
-  "roc_auc_pct": 50.2,
-  "duration_seconds": 1.74,
-  "features_count": 32,
-  "trained_at": "2026-10-04 04:39:32 UTC"
+  "dataset_bars": 1287,
+  "samples_trained": 597,
+  "samples_tested": 252,
+  "test_accuracy_pct": 31.35,
+  "cv_accuracy_pct": 54.52,
+  "roc_auc_pct": 47.43,
+  "hc_test_accuracy_pct": 30.56,
+  "hc_test_coverage_pct": 14.29,
+  "top_features": [
+    {
+      "feature": "rsi_15m",
+      "importance": 1.397
+    },
+    {
+      "feature": "ret_15m",
+      "importance": 1.086
+    },
+    {
+      "feature": "parkinson_vol",
+      "importance": 0.656
+    },
+    {
+      "feature": "mom_accel",
+      "importance": 0.434
+    },
+    {
+      "feature": "ret_45m",
+      "importance": 0.35
+    },
+    {
+      "feature": "ofip",
+      "importance": 0.346
+    },
+    {
+      "feature": "bar_dir",
+      "importance": 0.288
+    },
+    {
+      "feature": "ret_1h",
+      "importance": 0.286
+    }
+  ],
+  "duration_seconds": 10.17,
+  "trained_at": "2026-10-04 14:31:30 UTC",
+  "status": "DEPLOYED_ACTIVE",
+  "is_validated": false
 }
