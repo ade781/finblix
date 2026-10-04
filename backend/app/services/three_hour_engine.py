@@ -13,6 +13,7 @@ from app.models.asset import Asset
 from app.services.scraper_service import ScraperService
 from app.services.market_data import binance_klines, yf_history, is_crypto, is_idx, frame_to_bars, DataUnavailable
 from app.services.quant_ml import fit_direction_model, conviction_tier
+from app.services.ml_training_engine import MLTrainingEngine
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage")
 os.makedirs(MODELS_DIR, exist_ok=True)
@@ -587,7 +588,7 @@ class ThreeHourPredictionEngine:
         model_path = os.path.join(MODELS_DIR, f"{slug}_15m_model.joblib")
         if not os.path.exists(model_path):
             try:
-                await cls.train_7d_model(db, symbol)
+                await MLTrainingEngine.train_model_for_asset(db, symbol, interval="15m", horizon=12)
             except Exception as e:
                 print(f"[3HEngine] Auto-train 15m warning: {e}")
 
@@ -761,10 +762,20 @@ class ThreeHourPredictionEngine:
         except Exception as e:
             print(f"[3HEngine] Daily confluence check warning: {e}")
 
+        trading_fee_assumption = 0.20 # Asumsi fee Binance Spot/Futures 0.1% buka + 0.1% tutup
+        expected_ret = round(drift_pct * 100, 2)
+        net_ret = round(abs(expected_ret) - trading_fee_assumption, 2)
+        
         if direction == "NAIK":
-            tactical_rec = f"Manfaatkan area dip pada step ke-{dip_step['step']} ({dip_step['interval_label']} di {dip_step['projected_price']:,.2f}) untuk entry bertahap, pasang target taking profit pada step ke-{peak_step['step']} ({peak_step['interval_label']} di {peak_step['projected_price']:,.2f})."
+            if net_ret <= 0:
+                tactical_rec = f"Sinyal NAIK lemah (Profit: {expected_ret}%). Potensi keuntungan tidak sebanding dengan biaya trading (Fee ~0.2%). Tahan posisi, tidak disarankan entry baru."
+            else:
+                tactical_rec = f"Manfaatkan area dip pada step ke-{dip_step['step']} ({dip_step['interval_label']} di {dip_step['projected_price']:,.2f}) untuk entry LONG/Beli, pasang target taking profit pada step ke-{peak_step['step']} ({peak_step['interval_label']} di {peak_step['projected_price']:,.2f}). (Net Profit Est: {net_ret}%)"
         else:
-            tactical_rec = f"Waspadai tekanan turun bertahap hingga step ke-{dip_step['step']} ({dip_step['interval_label']} di {dip_step['projected_price']:,.2f}). Jika memegang posisi, pasang trailing stop ketat di level {lower_target:,.2f}."
+            if net_ret <= 0:
+                tactical_rec = f"Sinyal TURUN lemah (Loss: {expected_ret}%). Terlalu berisiko untuk posisi Short karena tergerus fee. Pasang trailing stop ketat di {upper_target:,.2f} jika memegang Spot."
+            else:
+                tactical_rec = f"Peluang SHORT (Jual Kosong) Futures: Buka posisi Short pada pantulan ke-{peak_step['step']} ({peak_step['interval_label']} di {peak_step['projected_price']:,.2f}), taking profit di area lembah step ke-{dip_step['step']} ({dip_step['interval_label']} di {dip_step['projected_price']:,.2f}). (Net Profit Est: {net_ret}%)"
 
         pred_dict = {
             "direction": direction,
@@ -774,7 +785,8 @@ class ThreeHourPredictionEngine:
             "conviction_tier": "HIGH CONVICTION" if confidence >= 68.0 else "MODERATE" if confidence >= 58.0 else "LOW CONVICTION",
             "meta_label_probability": round(meta_prob * 100, 1),
             "meta_conviction": "HIGH_CONVICTION" if meta_prob >= 0.62 else "MODERATE_CONVICTION" if meta_prob >= 0.52 else "NOISE_FILTERED",
-            "expected_return_percent": round(drift_pct * 100, 2),
+            "expected_return_percent": expected_ret,
+            "net_expected_return_percent": net_ret,
             "ml_probability_up": round(ml_prob_up * 100, 1),
             "total_intervals": 12,
             "interval_granularity": "15m",

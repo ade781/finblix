@@ -185,6 +185,7 @@ class MLTrainingEngine:
         df: pd.DataFrame, 
         fng_map: Dict[str, float], 
         news_map: Optional[Dict[str, float]] = None,
+        horizon: int = 1
     ) -> Tuple[pd.DataFrame, List[str], pd.Series, pd.Series]:
         """
         Builds features and targets for the quant_ml engine pipeline.
@@ -206,8 +207,11 @@ class MLTrainingEngine:
             "ret_1d_lag1", "ret_1d_lag2"
         ]
 
-        fwd_ret = (df["close"].shift(-1) / df["close"]) - 1.0
-        scale = df["atr_norm"]
+        fwd_ret = (df["close"].shift(-horizon) / df["close"]) - 1.0
+        
+        # Scale volatility to the horizon (assuming atr_norm is daily/per-bar).
+        # We multiply by sqrt(horizon) to estimate volatility over the forward period.
+        scale = df["atr_norm"] * np.sqrt(horizon)
 
         return df, feature_cols_all, fwd_ret, scale
 
@@ -256,32 +260,33 @@ class MLTrainingEngine:
         n_estimators_rf: int = 500, 
         n_estimators_gb: int = 400,
         n_estimators_et: int = 300,
-        bars_limit: int = 1500
+        bars_limit: int = 1500,
+        interval: str = "1d",
+        horizon: int = 1
     ) -> Dict[str, Any]:
         """
         Refactored: Uses MarketDataService and quant_ml.py leakage-safe pipeline.
-        The old hyperparams are kept in the signature for backward compatibility but ignored,
-        since candidate_models in quant_ml handles the ensemble design.
+        Supports variable interval and horizon for short-term and multi-timeframe ML predictions.
         """
         start_time = time.time()
-        slug = cls._slugify(symbol)
+        slug = f"{cls._slugify(symbol)}_{interval}" if interval != "1d" else cls._slugify(symbol)
         
         # 1. Disk-cached robust data ingestion
         if is_crypto(symbol):
-            df = binance_klines(symbol, interval="1d", lookback_bars=bars_limit)
+            df = binance_klines(symbol, interval=interval, lookback_bars=bars_limit)
         else:
             df = yf_history(symbol, period="5y", interval="1d")
             df = df.tail(bars_limit).reset_index(drop=True)
             
         if len(df) < 100:
-            raise ValueError(f"Data historis tidak mencukupi untuk training (hanya {len(df)} bar)")
+            raise ValueError(f"Data historis tidak mencukupi untuk training {symbol} {interval} (hanya {len(df)} bar)")
 
         # 2. Sentimen dll
         fng_map = cls.load_historical_fng_series()
         news_sentiment_map = ScraperService.get_date_sentiment_map(db, symbol)
 
         # 3. Fitur
-        feat_df, feature_cols, fwd_ret, scale = cls.build_ml_features(df, fng_map, news_sentiment_map)
+        feat_df, feature_cols, fwd_ret, scale = cls.build_ml_features(df, fng_map, news_sentiment_map, horizon=horizon)
         
         # 4. Training (quant_ml)
         fit_result = fit_direction_model(
@@ -289,7 +294,7 @@ class MLTrainingEngine:
             candidate_cols=feature_cols,
             fwd_ret=fwd_ret,
             scale=scale,
-            horizon=1,
+            horizon=horizon,
             k_deadband=0.25, # Deadband scaling
             test_frac=0.2,
             n_splits=5,
@@ -343,8 +348,8 @@ class MLTrainingEngine:
         return meta_data
 
     @classmethod
-    def get_trained_model_status(cls, symbol: str) -> Optional[Dict[str, Any]]:
-        slug = cls._slugify(symbol)
+    def get_trained_model_status(cls, symbol: str, interval: str = "1d") -> Optional[Dict[str, Any]]:
+        slug = f"{cls._slugify(symbol)}_{interval}" if interval != "1d" else cls._slugify(symbol)
         meta_path = os.path.join(MODELS_DIR, f"{slug}_meta.json")
         if os.path.exists(meta_path):
             try:
@@ -355,8 +360,8 @@ class MLTrainingEngine:
         return None
 
     @classmethod
-    async def predict_with_ml_model(cls, db: Session, symbol: str) -> Optional[Dict[str, Any]]:
-        slug = cls._slugify(symbol)
+    async def predict_with_ml_model(cls, db: Session, symbol: str, interval: str = "1d") -> Optional[Dict[str, Any]]:
+        slug = f"{cls._slugify(symbol)}_{interval}" if interval != "1d" else cls._slugify(symbol)
         model_path = os.path.join(MODELS_DIR, f"{slug}_model.joblib")
         if not os.path.exists(model_path):
             return None
@@ -373,7 +378,7 @@ class MLTrainingEngine:
             hc_threshold = payload.get("hc_threshold", 0.55)
 
             if is_crypto(symbol):
-                df = binance_klines(symbol, interval="1d", lookback_bars=150)
+                df = binance_klines(symbol, interval=interval, lookback_bars=150)
             else:
                 df = yf_history(symbol, period="1y", interval="1d")
                 df = df.tail(150).reset_index(drop=True)
