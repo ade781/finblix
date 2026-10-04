@@ -33,7 +33,8 @@ import {
   Download,
   Check,
   GitMerge,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 
 const PRESET_ASSETS = [
@@ -91,14 +92,14 @@ export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 
     fetchPrediction(selectedSymbol);
   }, [selectedSymbol]);
 
-  // Live Countdown Timer to next 5-minute bar boundary (300 seconds)
+  // Live Countdown Timer to next 15-minute bar boundary (900 seconds)
   useEffect(() => {
     const updateCountdown = () => {
       const now = Math.floor(Date.now() / 1000);
-      const remaining = 300 - (now % 300);
+      const remaining = 900 - (now % 900);
       setTimeUntilNextBar(remaining);
-      if (remaining === 300 && autoRefresh) {
-        // Trigger background silent refresh at bar close
+      if (remaining === 900 && autoRefresh) {
+        // Trigger background silent refresh at 15m bar close
         fetchPrediction(selectedSymbol, true);
       }
     };
@@ -206,7 +207,9 @@ Finblix AI Intraday Radar Engine`;
   const backtest = predictionData?.backtest_7d_accuracy;
   const newsSentiment = predictionData?.daily_news_sentiment || predictionData?.scraped_news_summary;
   const marketSession = predictionData?.market_session;
-  const trajectoryData = predictionData?.trajectory_5m;
+  const trajectoryData = predictionData?.trajectory_15m || predictionData?.trajectory_5m;
+  const intervals15m = predictionData?.intervals_15m || [];
+  const trajectorySummary = predictionData?.trajectory_summary;
   const confluence = predictionData?.multi_timeframe_confluence;
   const anomaly = predictionData?.intraday_anomaly;
 
@@ -244,10 +247,10 @@ Finblix AI Intraday Radar Engine`;
               )}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-mono">
-              PREDIKSI 3 JAM KE DEPAN
+              PREDIKSI 3 JAM TIAP 15 MENIT
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
-              Model Intraday Ensemble (Random Forest 150 + HistGradientBoosting 100) dilatih menggunakan data per jam selama 7 hari ke belakang (168 bar), dipadukan dengan scraping massal berita finansial harian untuk proyeksi arah pergerakan harga 3 jam ke depan.
+              Model Kuantitatif Intraday Multi-Horizon dilatih pada dataset native 15-menit (hingga 1000 bar) untuk memproyeksikan lintasan harga terstruktur tiap 15 menit selama 3 jam (12 interval), memadukan mikrostruktur pasar, order flow proxy, dan analisis sentimen harian.
             </p>
           </div>
 
@@ -301,7 +304,7 @@ Finblix AI Intraday Radar Engine`;
             {/* Live Countdown & Auto-Refresh Bar */}
             <div className="flex items-center space-x-2 text-[11px] font-mono bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
               <span className={`w-2 h-2 rounded-full ${autoRefresh ? 'bg-cyan-400 animate-pulse' : 'bg-slate-600'}`} />
-              <span className="text-slate-400">Pembaruan Bar 5M:</span>
+              <span className="text-slate-400">Pembaruan Bar 15M:</span>
               <span className="font-bold text-white">{countdownMinutes}:{countdownSeconds}</span>
               <button
                 onClick={() => setAutoRefresh(!autoRefresh)}
@@ -607,20 +610,277 @@ Finblix AI Intraday Radar Engine`;
               <div className="mt-5 p-3 rounded-xl bg-slate-950/50 border border-slate-800/80 text-[11px] font-mono text-slate-400 flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>
-                  Batas atas dan batas bawah dikalkulasi secara dinamis menggunakan ATR 1-jam dan standar deviasi Bollinger Bands (2.0 SD) dari 168 bar training.
+                  Batas atas dan batas bawah dikalkulasi secara dinamis menggunakan ATR 15-menit dan standar deviasi volatilitas kuantitatif (90% Confidence Corridor).
                 </span>
               </div>
             </div>
           </div>
 
-          {/* CENTERPIECE: INTERACTIVE 3-HOUR PROJECTION TRAJECTORY CHART (5M VOLATILITY FUNNEL) */}
+          {/* CENTERPIECE: INTERACTIVE 3-HOUR PROJECTION TRAJECTORY CHART (15M MILESTONES) */}
           <ThreeHourProjectionChart
             trajectoryData={trajectoryData}
             direction={pred?.direction}
             currentPrice={targetPrice?.current_price}
             targetPrice={targetPrice?.projected_target_price}
             marketSession={marketSession}
+            trajectorySummary={trajectorySummary}
           />
+
+          {/* MATRIKS LINTASAN TIAP 15 MENIT (12 INTERVAL PROYEKSI 3 JAM) */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800 gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                    <Layers className="w-4 h-4" />
+                  </span>
+                  <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                    <span>Matriks Proyeksi Tiap 15 Menit Selama 3 Jam (12 Interval)</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                      STEP-BY-STEP PROJECTION
+                    </span>
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Rincian matematis arah, estimasi harga, probabilitas, dan rentang volatilitas untuk setiap interval 15 menit ke depan (+15m s/d +180m).
+                </p>
+              </div>
+              <div className="text-xs font-mono text-slate-400 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 flex items-center space-x-2 shrink-0">
+                <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Total Horizon: 180 Menit</span>
+              </div>
+            </div>
+
+            {/* Market Regime & Marcos Lopez de Prado Triple Barrier Strategy */}
+            {predictionData?.market_regime && (
+              <div className="p-4 bg-slate-950/80 border border-slate-800/90 rounded-xl space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/60 pb-2.5">
+                  <div className="flex items-center space-x-2">
+                    <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                      Rezim Pasar Intraday & Strategi Triple Barrier (De Prado AFML)
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border ${
+                      predictionData.market_regime.regime === 'TREND_EXPANSION'
+                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+                        : predictionData.market_regime.regime === 'VOLATILITY_SQUEEZE'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}>
+                      {predictionData.market_regime.label}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      ADX: {predictionData.market_regime.adx_proxy} | ATR: {predictionData.market_regime.atr_norm_pct}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
+                  <div className="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <div className="text-[10px] text-emerald-400 uppercase font-bold">Target Take-Profit (TP)</div>
+                    <div className="text-base font-black text-white mt-0.5">
+                      {predictionData.triple_barrier_strategy?.take_profit_target?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </div>
+                    <div className="text-[10px] text-slate-400">Barrier Volatilitas Atas</div>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <div className="text-[10px] text-rose-400 uppercase font-bold">Batas Stop-Loss (SL)</div>
+                    <div className="text-base font-black text-white mt-0.5">
+                      {predictionData.triple_barrier_strategy?.stop_loss_target?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </div>
+                    <div className="text-[10px] text-slate-400">Proteksi Likuiditas Bawah</div>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <div className="text-[10px] text-cyan-400 uppercase font-bold">Risk-to-Reward (R:R)</div>
+                    <div className="text-base font-black text-cyan-300 mt-0.5">
+                      1 : {predictionData.triple_barrier_strategy?.risk_reward_ratio || 1.3}
+                    </div>
+                    <div className="text-[10px] text-slate-400">Rasio Asimetri Eksekusi</div>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <div className="text-[10px] text-purple-400 uppercase font-bold">Meta-Labeling Conviction</div>
+                    <div className="text-base font-black text-purple-300 mt-0.5">
+                      {predictionData.triple_barrier_strategy?.meta_label_probability || 60}%
+                    </div>
+                    <div className="text-[10px] text-slate-400">
+                      Status: {predictionData.triple_barrier_strategy?.meta_conviction}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-400 bg-slate-900/40 p-2.5 rounded-lg border border-slate-800/60 leading-relaxed">
+                  <strong className="text-slate-300">Deskripsi Rezim: </strong>
+                  {predictionData.market_regime.desc}
+                </div>
+              </div>
+            )}
+
+            {/* Highlights: Peak & Dip Banner */}
+            {trajectorySummary && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs">
+                <div className="p-3.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl space-y-1">
+                  <div className="flex items-center justify-between text-emerald-400 text-[10px] uppercase font-bold">
+                    <span>Target Puncak (Peak)</span>
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-xl font-black text-white">
+                    {trajectorySummary.peak_target?.price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    <span className="text-xs text-emerald-400 ml-2 font-bold">
+                      {trajectorySummary.peak_target?.change_percent >= 0 ? '+' : ''}{trajectorySummary.peak_target?.change_percent}%
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Diproyeksikan pada <span className="text-white font-bold">{trajectorySummary.peak_target?.interval_label}</span> ({trajectorySummary.peak_target?.time_wib})
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-amber-950/30 border border-amber-500/30 rounded-xl space-y-1">
+                  <div className="flex items-center justify-between text-amber-400 text-[10px] uppercase font-bold">
+                    <span>Target Titik Terendah (Dip)</span>
+                    <Activity className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-xl font-black text-white">
+                    {trajectorySummary.dip_target?.price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    <span className="text-xs text-rose-400 ml-2 font-bold">
+                      {trajectorySummary.dip_target?.change_percent >= 0 ? '+' : ''}{trajectorySummary.dip_target?.change_percent}%
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Diproyeksikan pada <span className="text-white font-bold">{trajectorySummary.dip_target?.interval_label}</span> ({trajectorySummary.dip_target?.time_wib})
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-cyan-950/30 border border-cyan-500/30 rounded-xl space-y-1">
+                  <div className="flex items-center justify-between text-cyan-400 text-[10px] uppercase font-bold">
+                    <span>Rentang Toleransi Volatilitas</span>
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="text-xl font-black text-cyan-300">
+                    ±{trajectorySummary.max_volatility_spread_percent}%
+                  </div>
+                  <div className="text-[11px] text-slate-400">
+                    Lebar koridor toleransi 90% confidence interval
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tactical Execution Plan Banner */}
+            {trajectorySummary?.tactical_recommendation && (
+              <div className="p-3.5 bg-slate-950/80 border border-slate-800 rounded-xl flex items-start space-x-2.5 text-xs text-slate-200">
+                <Zap className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-amber-300 font-mono uppercase text-[11px] block">Rencana Aksi Taktis (Tactical Execution Plan):</span>
+                  <span className="font-sans leading-relaxed text-slate-300">{trajectorySummary.tactical_recommendation}</span>
+                </div>
+              </div>
+            )}
+
+            {/* 12-Step Grid Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-2">
+              {intervals15m && intervals15m.length > 0 ? (
+                intervals15m.map((step) => {
+                  const isUpStep = step.direction === 'NAIK';
+                  const isDownStep = step.direction === 'TURUN';
+                  const isPeak = trajectorySummary?.peak_target?.step === step.step;
+                  const isDip = trajectorySummary?.dip_target?.step === step.step;
+
+                  return (
+                    <div
+                      key={step.step}
+                      className={`p-3.5 rounded-xl border transition-all relative overflow-hidden flex flex-col justify-between space-y-2.5 ${
+                        isPeak
+                          ? 'bg-emerald-950/20 border-emerald-500/50 shadow-md shadow-emerald-950/40'
+                          : isDip
+                          ? 'bg-amber-950/20 border-amber-500/50 shadow-md shadow-amber-950/40'
+                          : 'bg-slate-950/60 border-slate-800/80 hover:border-slate-700'
+                      }`}
+                    >
+                      {/* Header step & time */}
+                      <div className="flex items-center justify-between font-mono text-xs">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="font-bold text-white px-2 py-0.5 rounded bg-slate-800 text-[10px]">
+                            Step {step.step}
+                          </span>
+                          <span className="text-cyan-400 font-bold">{step.interval_label}</span>
+                        </div>
+                        <span className="text-[11px] text-slate-400">{step.time_label} WIB</span>
+                      </div>
+
+                      {/* Price & Change */}
+                      <div className="space-y-0.5">
+                        <div className="flex items-baseline justify-between font-mono">
+                          <span className="text-base font-black text-white">
+                            {step.projected_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className={`text-xs font-bold ${step.change_percent >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {step.change_percent >= 0 ? '+' : ''}{step.change_percent}%
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
+                          <span>Rentang:</span>
+                          <span>{step.lower_band?.toLocaleString('en-US', { maximumFractionDigits: 2 })} - {step.upper_band?.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                        </div>
+                        {step.take_profit_price && (
+                          <div className="flex items-center justify-between text-[9px] font-mono pt-1 text-slate-400 border-t border-slate-900">
+                            <span className="text-emerald-400">TP: {step.take_profit_price?.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                            <span className="text-rose-400">SL: {step.stop_loss_price?.toLocaleString('en-US', { maximumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Probability & Direction Badge */}
+                      <div className="space-y-1 pt-1 border-t border-slate-800/60">
+                        <div className="flex items-center justify-between text-[10px] font-mono">
+                          <span className={`px-2 py-0.5 rounded font-bold ${
+                            isUpStep ? 'bg-emerald-500/20 text-emerald-400' :
+                            isDownStep ? 'bg-rose-500/20 text-rose-400' :
+                            'bg-slate-800 text-slate-300'
+                          }`}>
+                            {step.direction}
+                          </span>
+                          <span className="text-slate-400">Prob: <strong className="text-white">{step.probability_percent}%</strong></span>
+                        </div>
+                        {/* Probability Progress Bar */}
+                        <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${isUpStep ? 'bg-emerald-400' : isDownStep ? 'bg-rose-400' : 'bg-slate-500'}`}
+                            style={{ width: `${step.probability_percent}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Microstructure Catalyst */}
+                      <div className="text-[10px] font-sans text-slate-400 leading-snug pt-1 border-t border-slate-800/40 line-clamp-2" title={step.catalyst}>
+                        {step.catalyst}
+                      </div>
+
+                      {/* Special Peak / Dip Badges */}
+                      {isPeak && (
+                        <div className="absolute top-1 right-1 text-[8px] font-mono font-bold bg-emerald-500 text-slate-950 px-1.5 py-0.5 rounded uppercase">
+                          PEAK
+                        </div>
+                      )}
+                      {isDip && (
+                        <div className="absolute top-1 right-1 text-[8px] font-mono font-bold bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded uppercase">
+                          DIP
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full py-8 text-center text-slate-500 font-mono text-xs">
+                  Memuat data matriks interval 15-menit...
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Multi-Timeframe Confluence & Strategic Alignment Card */}
           <div className="bg-gradient-to-r from-slate-900 via-[#0d1629] to-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
@@ -912,25 +1172,40 @@ Finblix AI Intraday Radar Engine`;
                 <div className="flex items-center space-x-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <h3 className="text-sm font-mono font-bold text-white uppercase tracking-wider">
-                    Rekam Jejak Evaluasi Backtest 7 Hari (168 Bar per Jam)
+                    Rekam Jejak Evaluasi Backtest Walk-Forward 7 Hari (15-Minute Candlestick)
                   </h3>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Pengujian validasi walk-forward historis pada setiap bar penutupan 1 jam untuk memverifikasi realisasi aktual 3 jam ke depan.
+                  Audit validasi walk-forward historis tanpa lookahead bias pada setiap bar 15 menit untuk memverifikasi realisasi aktual arah 3 jam ke depan.
                 </p>
               </div>
 
-              {/* Accuracy Badge */}
-              <div className="flex items-center space-x-3 bg-slate-950 p-2 rounded-xl border border-slate-800 font-mono">
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 uppercase">Akurasi 7 Hari (3H)</div>
-                  <div className="text-base font-black text-emerald-400">
-                    {backtest?.accuracy_percent || 0}%
+              {/* Accuracy Badges: High Conviction vs All */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center space-x-3 bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-500/30 font-mono">
+                  <div className="text-right">
+                    <div className="text-[10px] text-emerald-400 uppercase font-bold">Akurasi Sinyal Kuat</div>
+                    <div className="text-base font-black text-emerald-300">
+                      {backtest?.high_conviction_accuracy_percent || backtest?.accuracy_percent || 0}%
+                    </div>
+                  </div>
+                  <div className="text-xs text-emerald-400/80 border-l border-emerald-500/30 pl-3">
+                    <div>{backtest?.high_conviction_correct || backtest?.correct_predictions || 0} / {backtest?.high_conviction_evaluated_bars || backtest?.evaluated_bars || 0} Benar</div>
+                    <div className="text-[10px] text-emerald-400/60">High Conviction</div>
                   </div>
                 </div>
-                <div className="text-xs text-slate-500 border-l border-slate-800 pl-3">
-                  <div>{backtest?.correct_predictions || 0} / {backtest?.evaluated_bars || 0} Benar</div>
-                  <div className="text-[10px] text-slate-400">Bar Teruji</div>
+
+                <div className="flex items-center space-x-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono">
+                  <div className="text-right">
+                    <div className="text-[10px] text-slate-400 uppercase">Akurasi Semua Bar</div>
+                    <div className="text-base font-black text-white">
+                      {backtest?.accuracy_percent || 0}%
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-500 border-l border-slate-800 pl-3">
+                    <div>{backtest?.correct_predictions || 0} / {backtest?.evaluated_bars || 0} Benar</div>
+                    <div className="text-[10px] text-slate-400">Semua Bar 15M</div>
+                  </div>
                 </div>
               </div>
             </div>

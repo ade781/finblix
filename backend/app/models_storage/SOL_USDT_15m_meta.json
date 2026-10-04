@@ -1,0 +1,14 @@
+{
+  "symbol": "SOL/USDT",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 535,
+  "samples_tested": 134,
+  "test_accuracy_pct": 68.66,
+  "meta_accuracy_pct": 59.7,
+  "cv_accuracy_pct": 47.62,
+  "roc_auc_pct": 48.63,
+  "duration_seconds": 1.73,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:25 UTC"
+}

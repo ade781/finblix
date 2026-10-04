@@ -1,0 +1,14 @@
+{
+  "symbol": "BMRI.JK",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 489,
+  "samples_tested": 123,
+  "test_accuracy_pct": 58.54,
+  "meta_accuracy_pct": 66.67,
+  "cv_accuracy_pct": 49.73,
+  "roc_auc_pct": 44.76,
+  "duration_seconds": 1.08,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:33 UTC"
+}

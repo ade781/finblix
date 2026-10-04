@@ -1,0 +1,14 @@
+{
+  "symbol": "ETH/USDT",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 535,
+  "samples_tested": 134,
+  "test_accuracy_pct": 56.72,
+  "meta_accuracy_pct": 55.22,
+  "cv_accuracy_pct": 61.9,
+  "roc_auc_pct": 50.82,
+  "duration_seconds": 1.62,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:23 UTC"
+}

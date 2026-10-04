@@ -47,11 +47,12 @@ async def get_three_hour_prediction(
     db: Session = Depends(get_db)
 ):
     """
-    Mengembalikan prediksi horizon pendek 3 JAM KE DEPAN berdasarkan:
-    - Pelatihan data 7 hari ke belakang (timeframe 1-jam / 1h)
+    Mengembalikan prediksi lintasan granular per 15 MENIT selama 3 JAM KE DEPAN (12 interval proyeksi):
+    - Pelatihan data lilin native 15-menit (500-1000 bar) dengan GBDT & Random Forest
+    - 12 Titik milestone: +15m, +30m, +45m, +60m, ..., +180m (harga, probabilitas, batas volatilitas, katalis)
+    - Proyeksi titik puncak (Peak), titik terendah (Dip), dan strategi taktis
     - Scraping berita harian massal aktual dan analisis sentimen
-    - Proyeksi target harga 3 jam dan batas atas-bawah volatilitas intraday
-    - Evaluasi backtest walk-forward 7 hari intraday
+    - Evaluasi backtest walk-forward 15-menit 7 hari terakhir
     """
     try:
         result = await ThreeHourPredictionEngine.predict_3h_outlook(db, symbol)
@@ -72,8 +73,8 @@ async def train_three_hour_model(
     db: Session = Depends(get_db)
 ):
     """
-    Melatih model Machine Learning Intraday berbasis data 7 hari ke belakang (1h timeframe)
-    khusus untuk memprediksi arah pergerakan 3 jam ke depan.
+    Melatih model Machine Learning Intraday berbasis data 15-menit (Multi-Horizon 12-Interval)
+    khusus untuk memprediksi lintasan tiap 15 menit selama 3 jam ke depan.
     """
     try:
         report = await ThreeHourPredictionEngine.train_7d_model(db, symbol)

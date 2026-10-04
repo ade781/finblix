@@ -1,0 +1,14 @@
+{
+  "symbol": "TLKM.JK",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 489,
+  "samples_tested": 123,
+  "test_accuracy_pct": 60.16,
+  "meta_accuracy_pct": 68.29,
+  "cv_accuracy_pct": 47.54,
+  "roc_auc_pct": 47.11,
+  "duration_seconds": 1.2,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:35 UTC"
+}

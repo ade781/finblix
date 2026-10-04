@@ -1,0 +1,14 @@
+{
+  "symbol": "BBRI.JK",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 489,
+  "samples_tested": 123,
+  "test_accuracy_pct": 50.41,
+  "meta_accuracy_pct": 74.8,
+  "cv_accuracy_pct": 44.26,
+  "roc_auc_pct": 50.2,
+  "duration_seconds": 1.74,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:32 UTC"
+}

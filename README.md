@@ -1,4 +1,4 @@
-﻿# Finblix - AI Market Prediction & Quantitative Analytics Engine
+# Finblix - AI Market Prediction & Quantitative Analytics Engine
 
 Finblix adalah platform analitik finansial dan kecerdasan buatan kuantitatif berstandar institusional. Fokus utama platform ini adalah **Mesin Prediksi Arah Harian AI (Daily AI Prediction Engine)** yang memprediksi pergerakan harga instrumen finansial (Cryptocurrency dan Saham IHSG) untuk 24 jam ke depan dengan tingkat akurasi terverifikasi audit walk-forward.
 
@@ -30,7 +30,36 @@ Platform ini memadukan model Machine Learning (Random Forest & Gradient Boosting
 
 ---
 
-## 2. Fitur Pendukung Platform
+## 2. Mesin Prediksi Intraday 3-Jam Multi-Horizon (Tiap 15 Menit / 12 Interval)
+
+Finblix dilengkapi dengan mesin prediksi mikro-struktur **Intraday 3-Hour AI Trajectory Engine** yang memprediksi trajektori harga setiap **15 menit selama 3 jam ke depan (12 milestone sekuensial: +15m, +30m, +45m, ... +180m)**.
+
+### A. Tiga Pilar Iterasi Peningkatan Akurasi Kuantitatif (Riset Kuantitatif Mendalam)
+
+#### 🔹 Iterasi 1: Marcos López de Prado Triple Barrier Method (TBM) & Meta-Labeling
+- **Triple Barrier Labeling Dinamis**: Menggantikan pelabelan tetap berbasis tanda return dengan 3 pembatas realistis:
+  - *Barrier Atas (Take Profit)*: $+k \times \sigma_{15m}$ (volatilitas Parkinson lokal).
+  - *Barrier Bawah (Stop Loss)*: $-k \times \sigma_{15m}$ (proteksi likuiditas).
+  - *Barrier Vertikal (Time Horizon)*: Batas waktu maksimal 12 bar (180 menit).
+- **Secondary Meta-Classifier**: Model klasifikasi sekunder yang memprediksi apakah taruhan arah dari model primer memiliki probabilitas tinggi menyentuh batas *take-profit* sebelum batas *stop-loss*. Menyaring *false breakout* dan meningkatkan *win-rate* pada sinyal berkepastian tinggi (*high-conviction*).
+
+#### 🔹 Iterasi 2: Rekayasa Fitur Mikrostruktur & Memori Jangka Panjang (32 Fitur)
+- **Corwin-Schultz (2012) High-Low Bid-Ask Spread Estimator**: Mendeteksi pelebaran spread efektif dan gesekan likuiditas institusional dari 2 bar lilin berturut-turut.
+- **Fractional Differentiation (AFML Chapter 5, $d=0.40$)**: Mempertahankan memori harga jangka panjang level support/resistance historis tanpa melanggar asumsi stasioneritas model ML ($p < 0.01$).
+- **Amihud (2002) Illiquidity Ratio**: Mengukur elastisitas pergerakan harga per unit volume transaksi ($|R_t| / (\text{Volume} \times \text{Price})$).
+- **Order Flow Imbalance Proxy (OFIP)**: Menghitung dominasi agresi beli/jual berbasis posisi penutupan terhadap rentang lilin dan log-volume.
+
+#### 🔹 Iterasi 3: Regime Switching Conditioning & Calibrated Conformal Funnel
+- **Klasifikasi Rezim Pasar Intraday**:
+  - `TREND_EXPANSION`: Pasar dalam tren kuat ($ADX > 22$) -> Proyeksi momentum berlanjut dengan target barrier diperlebar.
+  - `MEAN_REVERSION`: Pasar berosilasi teratur -> Fisika trajektori menarik harga kembali ke anchored VWAP / EMA 20.
+  - `VOLATILITY_SQUEEZE`: Kompresi Bollinger Bands di dalam Keltner Channel -> Mengantisipasi ledakan arah pasca-konsolidasi.
+- **Probabilitas Terkalibrasi (Platt Sigmoid Scaling)**: Probabilitas model diselaraskan dengan frekuensi empiris menggunakan kalibrasi sigmoid.
+- **Target Triple Barrier Setiap Milestone**: Setiap langkah 15-menit dilengkapi target Take Profit ($TP$) dan Stop Loss ($SL$) yang ditampilkan interaktif pada UI.
+
+---
+
+## 3. Fitur Pendukung Platform
 
 1. **Dashboard Bento 2.0 Dark Mode**:
    - Desain modern minimalis berstandar institusi keuangan global.
@@ -56,7 +85,7 @@ Platform ini memadukan model Machine Learning (Random Forest & Gradient Boosting
 
 ---
 
-## 3. Struktur Direktori Proyek
+## 4. Struktur Direktori Proyek
 
 ```
 finblix/
@@ -85,7 +114,7 @@ finblix/
 
 ---
 
-## 4. Panduan Menjalankan Sistem
+## 5. Panduan Menjalankan Sistem
 
 ### Prasyarat
 - Python 3.10+

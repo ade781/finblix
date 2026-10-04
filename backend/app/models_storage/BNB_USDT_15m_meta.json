@@ -1,0 +1,14 @@
+{
+  "symbol": "BNB/USDT",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 535,
+  "samples_tested": 134,
+  "test_accuracy_pct": 47.76,
+  "meta_accuracy_pct": 41.04,
+  "cv_accuracy_pct": 63.66,
+  "roc_auc_pct": 49.57,
+  "duration_seconds": 1.68,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:26 UTC"
+}

@@ -15,7 +15,7 @@ YF_INTERVAL_MAP = {
 }
 
 YF_PERIOD_MAP = {
-    "15m": "5d",
+    "15m": "30d",
     "1h": "1mo",
     "4h": "3mo",
     "1d": "1y",

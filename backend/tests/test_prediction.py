@@ -63,9 +63,16 @@ def test_three_hour_engine_dataset_and_prediction():
 
         res = asyncio.run(ThreeHourEngine.predict_3h_outlook(db, 'BTC/USDT'))
         assert res['symbol'] == 'BTC/USDT'
+        assert res['granularity'] == '15m'
+        assert res['total_intervals'] == 12
+        assert len(res['intervals_15m']) == 12
+        assert res['intervals_15m'][0]['minutes_ahead'] == 15
+        assert res['intervals_15m'][11]['minutes_ahead'] == 180
         assert res['prediction_3h']['direction'] in ['NAIK', 'TURUN']
         assert 0 <= res['prediction_3h']['probability_percent'] <= 100
         assert res['target_price']['projected_target_price'] > 0
+        assert 'peak_target' in res['trajectory_summary']
+        assert 'dip_target' in res['trajectory_summary']
         assert res['backtest_7d_accuracy']['evaluated_bars'] > 0
     finally:
         db.close()

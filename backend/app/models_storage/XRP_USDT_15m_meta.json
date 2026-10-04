@@ -1,0 +1,14 @@
+{
+  "symbol": "XRP/USDT",
+  "target_horizon": "3_HOURS_15M_INTERVALS",
+  "training_window": "15M_CANDLES",
+  "samples_trained": 535,
+  "samples_tested": 134,
+  "test_accuracy_pct": 55.22,
+  "meta_accuracy_pct": 58.21,
+  "cv_accuracy_pct": 58.4,
+  "roc_auc_pct": 46.96,
+  "duration_seconds": 1.93,
+  "features_count": 32,
+  "trained_at": "2026-10-04 04:39:28 UTC"
+}
