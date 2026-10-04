@@ -1,53 +1,53 @@
 {
   "symbol": "BBCA.JK",
-  "trained_at": "2026-10-04 15:51:58 UTC",
+  "trained_at": "2026-10-04 16:48:19 UTC",
   "dataset_bars": 1203,
-  "samples_trained": 641,
+  "samples_trained": 640,
   "samples_tested": 231,
-  "training_duration_seconds": 97.88,
+  "training_duration_seconds": 115.35,
   "metrics": {
-    "train_accuracy_pct": 70.98,
-    "cv_5fold_mean_pct": 58.54,
-    "test_accuracy_pct": 57.58,
-    "roc_auc_pct": 57.99,
-    "hc_test_accuracy_pct": 60.17,
-    "hc_test_coverage_pct": 51.08
+    "train_accuracy_pct": 68.44,
+    "cv_5fold_mean_pct": 56.68,
+    "test_accuracy_pct": 58.01,
+    "roc_auc_pct": 59.48,
+    "hc_test_accuracy_pct": 65.75,
+    "hc_test_coverage_pct": 31.6
   },
   "top_features": [
     {
       "feature": "rsi_macd_divergence",
-      "importance": 3.272
+      "importance": 3.064
     },
     {
       "feature": "lower_wick",
-      "importance": 2.036
+      "importance": 1.849
     },
     {
       "feature": "bb_width",
-      "importance": 1.594
-    },
-    {
-      "feature": "upper_wick",
-      "importance": 0.725
+      "importance": 1.213
     },
     {
       "feature": "ret_1d",
-      "importance": 0.563
+      "importance": 1.145
+    },
+    {
+      "feature": "upper_wick",
+      "importance": 0.885
+    },
+    {
+      "feature": "price_to_ema50",
+      "importance": 0.56
     },
     {
       "feature": "ema20_to_ema50",
-      "importance": 0.419
+      "importance": 0.326
     },
     {
-      "feature": "atr_ratio",
-      "importance": 0.411
-    },
-    {
-      "feature": "bb_percent_b",
-      "importance": 0.333
+      "feature": "vol_roc",
+      "importance": 0.255
     }
   ],
   "model_architecture": "soft_vote",
   "status": "DEPLOYED_ACTIVE",
-  "is_validated": false
+  "is_validated": true
 }

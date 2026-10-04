@@ -1,10 +1,10 @@
 {
   "symbol": "SOL/USDT",
-  "trained_at": "2026-10-04 15:48:23 UTC",
+  "trained_at": "2026-10-04 16:33:18 UTC",
   "dataset_bars": 1499,
   "samples_trained": 748,
   "samples_tested": 290,
-  "training_duration_seconds": 118.2,
+  "training_duration_seconds": 117.82,
   "metrics": {
     "train_accuracy_pct": 73.4,
     "cv_5fold_mean_pct": 54.0,

@@ -3,49 +3,49 @@
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
   "dataset_bars": 17000,
-  "samples_trained": 8547,
+  "samples_trained": 8545,
   "samples_tested": 3388,
-  "test_accuracy_pct": 52.24,
-  "cv_accuracy_pct": 53.84,
-  "roc_auc_pct": 51.18,
-  "hc_test_accuracy_pct": 53.36,
-  "hc_test_coverage_pct": 13.16,
+  "test_accuracy_pct": 52.63,
+  "cv_accuracy_pct": 55.95,
+  "roc_auc_pct": 51.1,
+  "hc_test_accuracy_pct": 52.78,
+  "hc_test_coverage_pct": 43.06,
   "top_features": [
     {
       "feature": "dist_vwap",
-      "importance": 1.041
+      "importance": 1.638
     },
     {
-      "feature": "atr_norm",
-      "importance": 0.811
+      "feature": "rolling_vol_12h",
+      "importance": 1.356
     },
     {
       "feature": "cos_time",
-      "importance": 0.713
-    },
-    {
-      "feature": "cmf_14",
-      "importance": 0.708
-    },
-    {
-      "feature": "bb_pct_b",
-      "importance": 0.583
+      "importance": 0.761
     },
     {
       "feature": "rsi_15m",
-      "importance": 0.52
+      "importance": 0.674
+    },
+    {
+      "feature": "bb_pct_b",
+      "importance": 0.607
+    },
+    {
+      "feature": "day_sin",
+      "importance": 0.488
     },
     {
       "feature": "dist_ema50",
-      "importance": 0.457
+      "importance": 0.398
     },
     {
       "feature": "bb_width",
-      "importance": 0.457
+      "importance": 0.376
     }
   ],
-  "duration_seconds": 32.03,
-  "trained_at": "2026-10-04 14:45:25 UTC",
+  "duration_seconds": 196.63,
+  "trained_at": "2026-10-04 16:20:23 UTC",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": false
 }

@@ -1,10 +1,10 @@
 {
   "symbol": "XRP/USDT",
-  "trained_at": "2026-10-04 15:50:20 UTC",
+  "trained_at": "2026-10-04 16:38:50 UTC",
   "dataset_bars": 1499,
   "samples_trained": 687,
   "samples_tested": 290,
-  "training_duration_seconds": 116.01,
+  "training_duration_seconds": 119.42,
   "metrics": {
     "train_accuracy_pct": 65.79,
     "cv_5fold_mean_pct": 56.94,

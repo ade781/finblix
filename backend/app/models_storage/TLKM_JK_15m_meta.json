@@ -3,49 +3,49 @@
   "target_horizon": "3_HOURS_15M_INTERVALS",
   "training_window": "15M_CANDLES",
   "dataset_bars": 1286,
-  "samples_trained": 512,
-  "samples_tested": 251,
-  "test_accuracy_pct": 33.86,
-  "cv_accuracy_pct": 58.84,
-  "roc_auc_pct": 67.9,
-  "hc_test_accuracy_pct": 28.06,
-  "hc_test_coverage_pct": 55.38,
+  "samples_trained": 495,
+  "samples_tested": 245,
+  "test_accuracy_pct": 46.53,
+  "cv_accuracy_pct": 64.71,
+  "roc_auc_pct": 62.51,
+  "hc_test_accuracy_pct": 45.45,
+  "hc_test_coverage_pct": 17.96,
   "top_features": [
     {
+      "feature": "rolling_vol_12h",
+      "importance": 5.23
+    },
+    {
       "feature": "dist_ema50",
-      "importance": 5.763
+      "importance": 2.189
+    },
+    {
+      "feature": "ret_45m",
+      "importance": 1.426
+    },
+    {
+      "feature": "ret_2h",
+      "importance": 0.774
+    },
+    {
+      "feature": "parkinson_vol",
+      "importance": 0.58
     },
     {
       "feature": "macd_hist_15m",
-      "importance": 4.545
+      "importance": 0.531
     },
     {
-      "feature": "vol_surge",
-      "importance": 1.598
+      "feature": "corwin_schultz",
+      "importance": 0.323
     },
     {
-      "feature": "sin_time",
-      "importance": 1.36
-    },
-    {
-      "feature": "ret_1h",
-      "importance": 1.276
-    },
-    {
-      "feature": "bb_pct_b",
-      "importance": 1.097
-    },
-    {
-      "feature": "mom_accel",
-      "importance": 0.991
-    },
-    {
-      "feature": "amihud_illiq",
-      "importance": 0.704
+      "feature": "ofip",
+      "importance": 0.309
     }
   ],
-  "duration_seconds": 8.93,
-  "trained_at": "2026-10-04 14:32:42 UTC",
+  "duration_seconds": 108.73,
+  "trained_at": "2026-10-04 17:07:34 UTC",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": false
 }

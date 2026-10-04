@@ -1,53 +1,53 @@
 {
   "symbol": "BMRI.JK",
-  "trained_at": "2026-10-04 15:54:52 UTC",
+  "trained_at": "2026-10-04 16:56:14 UTC",
   "dataset_bars": 1204,
-  "samples_trained": 589,
+  "samples_trained": 590,
   "samples_tested": 231,
-  "training_duration_seconds": 78.85,
+  "training_duration_seconds": 136.98,
   "metrics": {
-    "train_accuracy_pct": 67.57,
-    "cv_5fold_mean_pct": 55.74,
-    "test_accuracy_pct": 48.48,
-    "roc_auc_pct": 49.32,
-    "hc_test_accuracy_pct": 48.21,
-    "hc_test_coverage_pct": 72.73
+    "train_accuracy_pct": 48.98,
+    "cv_5fold_mean_pct": 49.44,
+    "test_accuracy_pct": 56.28,
+    "roc_auc_pct": 52.7,
+    "hc_test_accuracy_pct": 56.28,
+    "hc_test_coverage_pct": 100.0
   },
   "top_features": [
     {
       "feature": "macd_accel",
-      "importance": 1.889
+      "importance": 2.186
     },
     {
       "feature": "vol_roc",
-      "importance": 1.674
+      "importance": 1.394
     },
     {
       "feature": "price_to_ema50",
-      "importance": 1.028
-    },
-    {
-      "feature": "rsi_delta",
-      "importance": 0.803
+      "importance": 0.645
     },
     {
       "feature": "upper_wick",
-      "importance": 0.427
+      "importance": 0.613
     },
     {
-      "feature": "lower_wick",
-      "importance": 0.309
+      "feature": "rsi_delta",
+      "importance": 0.507
     },
     {
-      "feature": "ret_14d",
-      "importance": 0.249
+      "feature": "news_sentiment_7d",
+      "importance": 0.447
     },
     {
       "feature": "trend_strength",
-      "importance": 0.226
+      "importance": 0.306
+    },
+    {
+      "feature": "cmf_20",
+      "importance": 0.239
     }
   ],
-  "model_architecture": "rf",
+  "model_architecture": "stacking",
   "status": "DEPLOYED_ACTIVE",
-  "is_validated": false
+  "is_validated": true
 }

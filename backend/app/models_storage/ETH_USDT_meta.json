@@ -1,10 +1,10 @@
 {
   "symbol": "ETH/USDT",
-  "trained_at": "2026-10-04 15:41:51 UTC",
+  "trained_at": "2026-10-04 16:17:06 UTC",
   "dataset_bars": 1499,
   "samples_trained": 686,
   "samples_tested": 290,
-  "training_duration_seconds": 261.46,
+  "training_duration_seconds": 282.58,
   "metrics": {
     "train_accuracy_pct": 97.23,
     "cv_5fold_mean_pct": 55.61,

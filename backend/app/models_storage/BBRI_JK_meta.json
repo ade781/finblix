@@ -1,53 +1,53 @@
 {
   "symbol": "BBRI.JK",
-  "trained_at": "2026-10-04 15:53:33 UTC",
+  "trained_at": "2026-10-04 16:53:07 UTC",
   "dataset_bars": 1204,
-  "samples_trained": 656,
+  "samples_trained": 653,
   "samples_tested": 231,
-  "training_duration_seconds": 94.65,
+  "training_duration_seconds": 222.2,
   "metrics": {
-    "train_accuracy_pct": 62.96,
-    "cv_5fold_mean_pct": 55.3,
-    "test_accuracy_pct": 48.92,
-    "roc_auc_pct": 48.04,
-    "hc_test_accuracy_pct": 51.76,
-    "hc_test_coverage_pct": 73.59
+    "train_accuracy_pct": 87.29,
+    "cv_5fold_mean_pct": 53.94,
+    "test_accuracy_pct": 48.48,
+    "roc_auc_pct": 48.56,
+    "hc_test_accuracy_pct": 53.85,
+    "hc_test_coverage_pct": 45.02
   },
   "top_features": [
     {
       "feature": "ret_1d",
-      "importance": 2.877
+      "importance": 3.665
     },
     {
       "feature": "macd_accel",
-      "importance": 1.899
+      "importance": 1.78
     },
     {
-      "feature": "ret_1d_lag2",
-      "importance": 0.645
-    },
-    {
-      "feature": "bb_width",
-      "importance": 0.636
+      "feature": "lower_wick",
+      "importance": 1.428
     },
     {
       "feature": "choppiness_index",
-      "importance": 0.526
+      "importance": 0.972
+    },
+    {
+      "feature": "bb_width",
+      "importance": 0.678
     },
     {
       "feature": "ret_14d",
-      "importance": 0.373
+      "importance": 0.456
     },
     {
-      "feature": "fng_delta",
-      "importance": 0.302
+      "feature": "ret_1d_lag2",
+      "importance": 0.405
     },
     {
       "feature": "fng_val",
-      "importance": 0.262
+      "importance": 0.343
     }
   ],
-  "model_architecture": "soft_vote",
+  "model_architecture": "hgb_tuned",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": false
 }
