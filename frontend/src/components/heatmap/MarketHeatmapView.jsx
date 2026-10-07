@@ -7,8 +7,6 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
   const filtered = tickers.filter(t => {
     if (filterType === 'all') return true;
     if (filterType === 'crypto') return t.asset_type === 'crypto';
-    if (filterType === 'stock_idx') return t.asset_type === 'stock_idx';
-    if (filterType === 'stock_us') return t.asset_type === 'stock_us' || t.asset_type === 'index';
     return true;
   });
 
@@ -23,9 +21,9 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
     return 'bg-slate-800 border-slate-700 text-slate-300';
   };
 
-  // Determine relative size (large for BTC, NVDA, BBCA, medium for others)
+  // Determine relative size (large for major cryptos, medium for others)
   const getTileSpan = (symbol) => {
-    if (['BTC/USDT', 'NVDA', 'BBCA.JK', 'ETH/USDT', 'AAPL'].includes(symbol)) {
+    if (['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT'].includes(symbol)) {
       return 'col-span-2 row-span-2 min-h-[140px]';
     }
     return 'col-span-1 row-span-1 min-h-[100px]';
@@ -41,7 +39,7 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
             <span>MARKET HEATMAP GRID</span>
           </h2>
           <p className="text-xs text-slate-400">
-            Peta visual performa pasar ala Finviz / Coin360. Klik kotak mana saja untuk membuka grafik aset.
+            Peta visual performa pasar ala Coin360. Klik kotak mana saja untuk membuka grafik aset.
           </p>
         </div>
 
@@ -62,22 +60,6 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
           >
             Kripto
           </button>
-          <button
-            onClick={() => setFilterType('stock_idx')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              filterType === 'stock_idx' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Saham IHSG
-          </button>
-          <button
-            onClick={() => setFilterType('stock_us')}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
-              filterType === 'stock_us' ? 'bg-blue-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Saham US
-          </button>
         </div>
       </div>
 
@@ -88,7 +70,6 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
           const isPos = chg >= 0;
           const colorClass = getTileColor(chg);
           const spanClass = getTileSpan(t.symbol);
-          const isIdr = t.base_currency === 'IDR' || t.symbol.endsWith('.JK');
 
           return (
             <div
@@ -98,7 +79,7 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-base sm:text-lg font-black font-mono tracking-tight leading-tight">
+                  <div className="text-base sm:lg font-black font-mono tracking-tight leading-tight">
                     {t.symbol}
                   </div>
                   <div className="text-[11px] opacity-80 truncate max-w-[120px] font-sans">
@@ -110,7 +91,7 @@ export default function MarketHeatmapView({ tickers = [], onSelectAsset }) {
 
               <div className="mt-2 flex items-baseline justify-between font-mono">
                 <div className="text-xs sm:text-sm font-bold opacity-90">
-                  {isIdr ? `Rp ${t.last_price?.toLocaleString('id-ID')}` : `$${t.last_price?.toLocaleString('en-US')}`}
+                  ${t.last_price?.toLocaleString('en-US')}
                 </div>
                 <div className="text-sm sm:text-base font-black flex items-center space-x-0.5">
                   {isPos ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}

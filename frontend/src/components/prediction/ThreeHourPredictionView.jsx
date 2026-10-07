@@ -7,9 +7,7 @@ import {
 import { 
   ThreeHourRadarIcon, 
   FinblixLogo, 
-  IdxEmblemIcon, 
-  CryptoOrbitIcon, 
-  GlobalMarketIcon 
+  CryptoOrbitIcon 
 } from '../icons/CustomIcons';
 import ThreeHourProjectionChart from './ThreeHourProjectionChart';
 import WebhookConfigView from './WebhookConfigView';
@@ -42,19 +40,19 @@ const PRESET_ASSETS = [
   { symbol: 'BTC/USDT', name: 'Bitcoin', type: 'crypto' },
   { symbol: 'ETH/USDT', name: 'Ethereum', type: 'crypto' },
   { symbol: 'SOL/USDT', name: 'Solana', type: 'crypto' },
-  { symbol: 'BBCA.JK', name: 'Bank Central Asia', type: 'idx' },
-  { symbol: 'BBRI.JK', name: 'Bank Rakyat Indonesia', type: 'idx' },
-  { symbol: 'BMRI.JK', name: 'Bank Mandiri', type: 'idx' },
-  { symbol: 'TLKM.JK', name: 'Telkom Indonesia', type: 'idx' },
-  { symbol: 'ASII.JK', name: 'Astra International', type: 'idx' },
-  { symbol: 'ICBP.JK', name: 'Indofood CBP', type: 'idx' },
-  { symbol: 'NVDA', name: 'Nvidia Corp', type: 'us' },
-  { symbol: 'AAPL', name: 'Apple Inc', type: 'us' }
+  { symbol: 'BNB/USDT', name: 'Binance Coin', type: 'crypto' },
+  { symbol: 'XRP/USDT', name: 'Ripple', type: 'crypto' },
+  { symbol: 'DOGE/USDT', name: 'Dogecoin', type: 'crypto' },
+  { symbol: 'ADA/USDT', name: 'Cardano', type: 'crypto' },
+  { symbol: 'AVAX/USDT', name: 'Avalanche', type: 'crypto' },
+  { symbol: 'LINK/USDT', name: 'Chainlink', type: 'crypto' },
+  { symbol: 'SUI/USDT', name: 'Sui Network', type: 'crypto' },
+  { symbol: 'NEAR/USDT', name: 'Near Protocol', type: 'crypto' },
+  { symbol: 'DOT/USDT', name: 'Polkadot', type: 'crypto' }
 ];
 
 export default function ThreeHourPredictionView({ tickers = [], defaultSymbol = 'BTC/USDT' }) {
   const [selectedSymbol, setSelectedSymbol] = useState(defaultSymbol);
-  const [activeCategory, setActiveCategory] = useState('all');
   const [loading, setLoading] = useState(true);
   const [predictionData, setPredictionData] = useState(null);
   const [error, setError] = useState(null);
@@ -194,13 +192,6 @@ Finblix AI Intraday Radar Engine`;
     downloadAnchor.click();
     downloadAnchor.remove();
   };
-
-  const filteredAssets = PRESET_ASSETS.filter(a => {
-    if (activeCategory === 'crypto') return a.type === 'crypto';
-    if (activeCategory === 'idx') return a.type === 'idx';
-    if (activeCategory === 'us') return a.type === 'us';
-    return true;
-  });
 
   const pred = predictionData?.prediction_3h || predictionData?.prediction;
   const targetPrice = predictionData?.target_price;
@@ -354,49 +345,10 @@ Finblix AI Intraday Radar Engine`;
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-1 sm:space-x-2">
-            <button
-              onClick={() => setActiveCategory('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                activeCategory === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
-              Semua Aset
-            </button>
-            <button
-              onClick={() => setActiveCategory('crypto')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                activeCategory === 'crypto'
-                  ? 'bg-purple-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
+            <span className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold bg-purple-600 text-white">
               <CryptoOrbitIcon className="w-3.5 h-3.5" />
-              <span>Kripto (24/7)</span>
-            </button>
-            <button
-              onClick={() => setActiveCategory('idx')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                activeCategory === 'idx'
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
-              <IdxEmblemIcon className="w-3.5 h-3.5" />
-              <span>Saham IDX (BEI)</span>
-            </button>
-            <button
-              onClick={() => setActiveCategory('us')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                activeCategory === 'us'
-                  ? 'bg-blue-500 text-white'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-              }`}
-            >
-              <GlobalMarketIcon className="w-3.5 h-3.5" />
-              <span>Wall Street (US)</span>
-            </button>
+              <span>Pasar Kripto 24/7 (Liquid Futures & Spot)</span>
+            </span>
           </div>
 
           <div className="text-[11px] font-mono text-slate-400 flex items-center space-x-2">
@@ -409,7 +361,7 @@ Finblix AI Intraday Radar Engine`;
 
         {/* Ticker Badges Grid */}
         <div className="flex flex-wrap gap-2 pt-1">
-          {filteredAssets.map(a => {
+          {PRESET_ASSETS.map(a => {
             const isSelected = a.symbol === selectedSymbol;
             return (
               <button
@@ -421,9 +373,7 @@ Finblix AI Intraday Radar Engine`;
                     : 'bg-slate-950/60 hover:bg-slate-800/80 text-slate-300 border-slate-800 hover:border-slate-700'
                 }`}
               >
-                {a.type === 'crypto' && <CryptoOrbitIcon className="w-3.5 h-3.5 text-purple-400" />}
-                {a.type === 'idx' && <IdxEmblemIcon className="w-3.5 h-3.5 text-emerald-400" />}
-                {a.type === 'us' && <GlobalMarketIcon className="w-3.5 h-3.5 text-blue-400" />}
+                <CryptoOrbitIcon className="w-3.5 h-3.5 text-purple-400" />
                 <span>{a.symbol}</span>
                 <span className="text-[10px] text-slate-500 font-sans font-normal truncate max-w-[90px]">{a.name}</span>
               </button>
@@ -1160,7 +1110,7 @@ Finblix AI Intraday Radar Engine`;
               </div>
 
               <div className="pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-500 flex items-center justify-between">
-                <span>Multi-Feed RSS: IDX, Finansial Nasional, Coindesk, Fed Macro</span>
+                <span>Multi-Feed RSS: Coindesk, CoinTelegraph, CryptoPanic & Global Macro</span>
                 <span className="text-cyan-400 font-bold">11 Saluran Terpantau</span>
               </div>
             </div>

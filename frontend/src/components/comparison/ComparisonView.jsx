@@ -6,12 +6,13 @@ const AVAILABLE_COMPARISON = [
   'BTC/USDT',
   'ETH/USDT',
   'SOL/USDT',
-  'BBCA.JK',
-  'BBRI.JK',
-  'NVDA',
-  'AAPL',
-  'TSLA',
-  'SPY'
+  'BNB/USDT',
+  'XRP/USDT',
+  'DOGE/USDT',
+  'ADA/USDT',
+  'AVAX/USDT',
+  'LINK/USDT',
+  'SUI/USDT'
 ];
 
 const COLOR_PALETTE = [
@@ -24,7 +25,7 @@ const COLOR_PALETTE = [
 ];
 
 export default function ComparisonView() {
-  const [selectedSymbols, setSelectedSymbols] = useState(['BTC/USDT', 'ETH/USDT', 'BBCA.JK', 'NVDA']);
+  const [selectedSymbols, setSelectedSymbols] = useState(['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT']);
   const [timeframe, setTimeframe] = useState('1d');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -90,7 +91,7 @@ export default function ComparisonView() {
             <span>MULTI-ASSET PERFORMANCE COMPARISON OVERLAY</span>
           </h2>
           <p className="text-xs text-slate-400">
-            Perbandingan kinerja keuntungan relatif (% Normalized Return) antar aset Kripto, Saham IHSG, dan Saham Global.
+            Perbandingan kinerja keuntungan relatif (% Normalized Return) antar aset Kripto teratas.
           </p>
         </div>
 

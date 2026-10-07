@@ -67,42 +67,6 @@ export function FinblixLogo({ className = "w-8 h-8", size }) {
   );
 }
 
-/**
- * Bursa Efek Indonesia (IDX / BEI) Emblem Icon
- * Geometric stock exchange architecture, volume accumulation pillars, and IDX upward index impulse.
- */
-export function IdxEmblemIcon({ className = "w-5 h-5", size }) {
-  const style = size ? { width: size, height: size } : undefined;
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      style={style}
-    >
-      <defs>
-        <linearGradient id="idx-grad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#10B981" />
-          <stop offset="100%" stopColor="#059669" />
-        </linearGradient>
-      </defs>
-
-      {/* Exchange Foundation Base */}
-      <rect x="2" y="19" width="20" height="2.5" rx="0.8" fill="url(#idx-grad)" fillOpacity="0.25" stroke="currentColor" strokeWidth="1.2" />
-      
-      {/* Institutional Capital Pillars */}
-      <path d="M5 19V11M9.5 19V9M14.5 19V11M19 19V7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      
-      {/* Classical Portico Pediment Roof */}
-      <path d="M2 9L12 3L22 9H2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" fill="currentColor" fillOpacity="0.12" />
-
-      {/* Ascending IHSG Trajectory Vector */}
-      <path d="M6 13L11 8L15 11L21 4.5" stroke="#34D399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M17.5 4.5H21V8" stroke="#34D399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 /**
  * Crypto Orbit & 24/7 Liquidity Mesh Icon
@@ -160,39 +124,6 @@ export function GlobalMarketIcon({ className = "w-5 h-5", size }) {
   );
 }
 
-/**
- * BERTopic Semantic Clustering Icon
- * Central semantic centroid with interconnected c-TF-IDF keyword satellite clusters.
- */
-export function BERTopicClusterIcon({ className = "w-5 h-5", size }) {
-  const style = size ? { width: size, height: size } : undefined;
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      style={style}
-    >
-      {/* Central Centroid Cluster Node */}
-      <circle cx="12" cy="12" r="3.2" stroke="#22D3EE" strokeWidth="1.8" fill="#0891B2" fillOpacity="0.3" />
-      <circle cx="12" cy="12" r="1.2" fill="#E0F2FE" />
-
-      {/* Satellite Topic Vectors */}
-      <line x1="12" y1="8.8" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.5 1.5" />
-      <circle cx="12" cy="3.5" r="2" stroke="currentColor" strokeWidth="1.4" fill="currentColor" fillOpacity="0.15" />
-
-      <line x1="14.5" y1="13.5" x2="19" y2="16.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.5 1.5" />
-      <circle cx="20" cy="17.5" r="2.2" stroke="#22D3EE" strokeWidth="1.4" fill="#0891B2" fillOpacity="0.2" />
-
-      <line x1="9.5" y1="13.5" x2="5" y2="16.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.5 1.5" />
-      <circle cx="4" cy="17.5" r="2.2" stroke="currentColor" strokeWidth="1.4" fill="currentColor" fillOpacity="0.15" />
-
-      <line x1="14.8" y1="10" x2="18.5" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="1.5 1.5" />
-      <circle cx="19.5" cy="6.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
-    </svg>
-  );
-}
 
 /**
  * Crypto Microstructure Candlestick Wick Icon

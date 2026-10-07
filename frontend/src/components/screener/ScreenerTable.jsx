@@ -58,10 +58,6 @@ export default function ScreenerTable({
       matchCategory = watchlistIds.has(item.id);
     } else if (categoryFilter === 'crypto') {
       matchCategory = item.asset_type === 'crypto';
-    } else if (categoryFilter === 'stock_idx') {
-      matchCategory = item.asset_type === 'stock_idx';
-    } else if (categoryFilter === 'stock_us') {
-      matchCategory = item.asset_type === 'stock_us' || item.asset_type === 'index';
     }
 
     const matchSearch = 
@@ -135,26 +131,6 @@ export default function ScreenerTable({
           >
             Kripto
           </button>
-          <button
-            onClick={() => setCategoryFilter('stock_idx')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              categoryFilter === 'stock_idx'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Saham IHSG
-          </button>
-          <button
-            onClick={() => setCategoryFilter('stock_us')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              categoryFilter === 'stock_us'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Saham Global (US)
-          </button>
         </div>
 
         {/* Search & Sort by */}
@@ -219,7 +195,6 @@ export default function ScreenerTable({
             {sorted.map(item => {
               const isPos = (item.change_24h_percent || 0) >= 0;
               const sig = getSignalBadge(item.overall_signal || 'neutral');
-              const isIdr = item.base_currency === 'IDR' || item.symbol.endsWith('.JK');
               const isFav = watchlistIds.has(item.id);
 
               return (
@@ -245,7 +220,7 @@ export default function ScreenerTable({
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right font-bold text-slate-100">
-                    {isIdr ? `Rp ${item.last_price?.toLocaleString('id-ID')}` : `$${item.last_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                    ${item.last_price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="py-3.5 px-4 text-right">
                     <span className={`inline-flex items-center gap-1 font-bold ${
