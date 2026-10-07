@@ -10,13 +10,13 @@ COLLATE utf8mb4_unicode_ci;
 
 USE finblix;
 
--- 1. Tabel Master Aset (Kripto, Saham US, Saham IHSG)
+-- 1. Tabel Master Aset (Kripto 24/7)
 CREATE TABLE IF NOT EXISTS assets (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    symbol VARCHAR(30) NOT NULL UNIQUE,       -- Contoh: 'BTC/USDT', 'BBCA.JK', 'AAPL'
-    name VARCHAR(100) NOT NULL,               -- Contoh: 'Bitcoin', 'Bank Central Asia', 'Apple Inc'
-    asset_type ENUM('crypto', 'stock_idx', 'stock_us', 'forex', 'index') NOT NULL,
-    base_currency VARCHAR(10) DEFAULT 'USD',  -- 'USD', 'IDR'
+    symbol VARCHAR(30) NOT NULL UNIQUE,       -- Contoh: 'BTC/USDT', 'ETH/USDT', 'SOL/USDT'
+    name VARCHAR(100) NOT NULL,               -- Contoh: 'Bitcoin', 'Ethereum', 'Solana'
+    asset_type ENUM('crypto', 'index', 'forex') NOT NULL DEFAULT 'crypto',
+    base_currency VARCHAR(10) DEFAULT 'USD',  -- 'USD', 'USDT'
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS news_articles (
     ai_summary TEXT,                          -- Ringkasan 3 poin AI
     sentiment_score DECIMAL(5, 4) NOT NULL,   -- Rentang -1.0000 s/d +1.0000
     sentiment_label ENUM('bearish', 'neutral', 'bullish') NOT NULL,
-    related_symbols VARCHAR(100),             -- 'BTC,ETH' atau 'BBCA.JK'
+    related_symbols VARCHAR(100),             -- 'BTC,ETH,SOL'
     scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_published (published_at DESC),
     INDEX idx_sentiment (sentiment_label)
@@ -133,20 +133,20 @@ CREATE TABLE IF NOT EXISTS alert_logs (
     INDEX idx_unread_alerts (is_read, triggered_at DESC)
 ) ENGINE=InnoDB;
 
--- Seeding Data Master Awal (Initial Seed)
+-- Seeding Data Master Awal (Pasar Kripto 24/7)
 INSERT IGNORE INTO assets (symbol, name, asset_type, base_currency) VALUES
 ('BTC/USDT', 'Bitcoin', 'crypto', 'USD'),
 ('ETH/USDT', 'Ethereum', 'crypto', 'USD'),
 ('SOL/USDT', 'Solana', 'crypto', 'USD'),
 ('BNB/USDT', 'BNB', 'crypto', 'USD'),
 ('XRP/USDT', 'Ripple', 'crypto', 'USD'),
-('BBCA.JK', 'Bank Central Asia Tbk', 'stock_idx', 'IDR'),
-('BBRI.JK', 'Bank Rakyat Indonesia Tbk', 'stock_idx', 'IDR'),
-('TLKM.JK', 'Telkom Indonesia Tbk', 'stock_idx', 'IDR'),
-('ASII.JK', 'Astra International Tbk', 'stock_idx', 'IDR'),
-('^JKSE', 'IHSG (Indeks Harga Saham Gabungan)', 'index', 'IDR'),
-('AAPL', 'Apple Inc', 'stock_us', 'USD'),
-('NVDA', 'Nvidia Corporation', 'stock_us', 'USD'),
-('TSLA', 'Tesla Inc', 'stock_us', 'USD'),
-('MSFT', 'Microsoft Corporation', 'stock_us', 'USD'),
-('SPY', 'SPDR S&P 500 ETF Trust', 'stock_us', 'USD');
+('DOGE/USDT', 'Dogecoin', 'crypto', 'USD'),
+('ADA/USDT', 'Cardano', 'crypto', 'USD'),
+('AVAX/USDT', 'Avalanche', 'crypto', 'USD'),
+('LINK/USDT', 'Chainlink', 'crypto', 'USD'),
+('DOT/USDT', 'Polkadot', 'crypto', 'USD'),
+('NEAR/USDT', 'NEAR Protocol', 'crypto', 'USD'),
+('SUI/USDT', 'Sui', 'crypto', 'USD'),
+('MATIC/USDT', 'Polygon', 'crypto', 'USD'),
+('UNI/USDT', 'Uniswap', 'crypto', 'USD'),
+('LTC/USDT', 'Litecoin', 'crypto', 'USD');
