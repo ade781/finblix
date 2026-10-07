@@ -14,12 +14,9 @@ ASSETS = [
     "BNB/USDT",
     "SOL/USDT",
     "XRP/USDT",
-    "BBCA.JK",
-    "BBRI.JK",
-    "BMRI.JK",
-    "ASII.JK",
-    "TLKM.JK",
-    "AAPL"
+    "DOGE/USDT",
+    "ADA/USDT",
+    "AVAX/USDT"
 ]
 
 async def train_all():

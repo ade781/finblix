@@ -8,15 +8,15 @@ from app.models.news import NewsArticle
 from app.services.sentiment_engine import SentimentEngine
 
 RSS_FEEDS = [
-    # Kripto
+    # Kripto Utama
     {
         "query": "Bitcoin crypto market",
         "url": "https://news.google.com/rss/search?q=Bitcoin+crypto+market&hl=en-US&gl=US&ceid=US:en",
         "symbols": "BTC/USDT,ETH/USDT,SOL/USDT,XRP/USDT"
     },
     {
-        "query": "Ethereum blockchain smart contract",
-        "url": "https://news.google.com/rss/search?q=Ethereum+crypto+blockchain&hl=en-US&gl=US&ceid=US:en",
+        "query": "Ethereum blockchain DeFi smart contracts",
+        "url": "https://news.google.com/rss/search?q=Ethereum+crypto+blockchain+DeFi&hl=en-US&gl=US&ceid=US:en",
         "symbols": "ETH/USDT,BTC/USDT"
     },
     {
@@ -24,47 +24,21 @@ RSS_FEEDS = [
         "url": "https://news.google.com/rss/search?q=Solana+crypto+Web3&hl=en-US&gl=US&ceid=US:en",
         "symbols": "SOL/USDT,BTC/USDT"
     },
-    # Saham Indonesia (IDX / BEI)
     {
-        "query": "saham IHSG Bank Central Asia BBCA",
-        "url": "https://news.google.com/rss/search?q=saham+IHSG+BBCA+Bank+Central+Asia&hl=id&gl=ID&ceid=ID:id",
-        "symbols": "BBCA.JK,BBRI.JK,BMRI.JK,IHSG"
+        "query": "Binance BNB Ripple XRP cryptocurrency",
+        "url": "https://news.google.com/rss/search?q=Binance+BNB+Ripple+XRP+crypto&hl=en-US&gl=US&ceid=US:en",
+        "symbols": "BNB/USDT,XRP/USDT,BTC/USDT"
     },
     {
-        "query": "saham Bank Rakyat Indonesia BBRI laba dividen",
-        "url": "https://news.google.com/rss/search?q=saham+BBRI+Bank+Rakyat+Indonesia+laba&hl=id&gl=ID&ceid=ID:id",
-        "symbols": "BBRI.JK,BBCA.JK,IHSG"
+        "query": "Altcoins crypto trading volume breakout",
+        "url": "https://news.google.com/rss/search?q=altcoins+crypto+bull+market&hl=en-US&gl=US&ceid=US:en",
+        "symbols": "DOGE/USDT,ADA/USDT,AVAX/USDT,LINK/USDT"
     },
+    # Makro Moneter Global & Likuiditas Kripto
     {
-        "query": "saham Bank Mandiri BMRI kinerja kredit",
-        "url": "https://news.google.com/rss/search?q=saham+BMRI+Bank+Mandiri+kinerja&hl=id&gl=ID&ceid=ID:id",
-        "symbols": "BMRI.JK,BBCA.JK,IHSG"
-    },
-    {
-        "query": "saham Telkom Indonesia TLKM infrastruktur digital",
-        "url": "https://news.google.com/rss/search?q=saham+TLKM+Telkom+Indonesia&hl=id&gl=ID&ceid=ID:id",
-        "symbols": "TLKM.JK,IHSG"
-    },
-    {
-        "query": "saham Astra International ASII otomotif ekuitas",
-        "url": "https://news.google.com/rss/search?q=saham+ASII+Astra+International&hl=id&gl=ID&ceid=ID:id",
-        "symbols": "ASII.JK,IHSG"
-    },
-    {
-        "query": "saham Indofood ICBP konsumsi",
-        "url": "https://news.google.com/rss/search?q=saham+ICBP+Indofood+CBP&hl=id&gl=ID&ceid=ID:id",
-        "symbols": "ICBP.JK,IHSG"
-    },
-    # Makro & Saham Global
-    {
-        "query": "Federal Reserve interest rate inflation Wall Street",
-        "url": "https://news.google.com/rss/search?q=Federal+Reserve+interest+rates+Wall+Street&hl=en-US&gl=US&ceid=US:en",
-        "symbols": "SPY,QQQ,AAPL,NVDA,BTC/USDT"
-    },
-    {
-        "query": "Nvidia Apple semiconductor tech market",
-        "url": "https://news.google.com/rss/search?q=Nvidia+Apple+stock+market&hl=en-US&gl=US&ceid=US:en",
-        "symbols": "NVDA,AAPL,MSFT,SPY"
+        "query": "Federal Reserve interest rates liquidity crypto Bitcoin",
+        "url": "https://news.google.com/rss/search?q=Federal+Reserve+rates+inflation+Bitcoin+crypto&hl=en-US&gl=US&ceid=US:en",
+        "symbols": "BTC/USDT,ETH/USDT"
     }
 ]
 
@@ -190,8 +164,8 @@ class ScraperService:
 
     @classmethod
     def get_recent_news_for_asset(cls, db: Session, symbol: str, limit: int = 15) -> List[Dict[str, Any]]:
-        """Mengambil berita harian terbaru yang spesifik relevan dengan simbol aset tertentu."""
-        sym_clean = symbol.split("/")[0].replace(".JK", "").lower()
+        """Mengambil berita harian terbaru yang spesifik relevan dengan simbol aset kripto tertentu."""
+        sym_clean = symbol.split("/")[0].lower()
         articles = db.query(NewsArticle).order_by(NewsArticle.published_at.desc()).limit(100).all()
         
         matched = []
@@ -199,9 +173,8 @@ class ScraperService:
             is_relevant = (
                 sym_clean in (a.related_symbols or "").lower() or 
                 sym_clean in a.title.lower() or 
-                "market" in a.title.lower() or 
-                "pasar" in a.title.lower() or
-                "ihsg" in a.title.lower()
+                "crypto" in a.title.lower() or 
+                "market" in a.title.lower()
             )
             if is_relevant:
                 matched.append({
@@ -219,7 +192,7 @@ class ScraperService:
     @classmethod
     def get_date_sentiment_map(cls, db: Session, symbol: str) -> Dict[str, float]:
         """Membuat mapping tanggal YYYY-MM-DD ke rata-rata sentimen berita riil dari DB."""
-        sym_clean = symbol.split("/")[0].replace(".JK", "").lower()
+        sym_clean = symbol.split("/")[0].lower()
         articles = db.query(NewsArticle).all()
         date_scores: Dict[str, List[float]] = {}
 
@@ -229,7 +202,7 @@ class ScraperService:
             is_relevant = (
                 sym_clean in (a.related_symbols or "").lower() or 
                 sym_clean in a.title.lower() or 
-                "pasar" in a.title.lower() or 
+                "crypto" in a.title.lower() or 
                 "market" in a.title.lower()
             )
             if is_relevant:

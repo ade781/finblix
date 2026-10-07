@@ -10,18 +10,15 @@ from app.core.database import SessionLocal
 from app.services.three_hour_engine import ThreeHourPredictionEngine
 
 SYMBOLS = [
-    # Cryptocurrencies
+    # Cryptocurrencies (24/7)
     "BTC/USDT",
     "ETH/USDT",
     "SOL/USDT",
     "BNB/USDT",
     "XRP/USDT",
-    # Indonesian Stocks
-    "BBCA.JK",
-    "BBRI.JK",
-    "BMRI.JK",
-    "TLKM.JK",
-    "ASII.JK",
+    "DOGE/USDT",
+    "ADA/USDT",
+    "AVAX/USDT",
 ]
 
 async def train_all():

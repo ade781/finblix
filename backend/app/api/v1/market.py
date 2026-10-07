@@ -25,13 +25,11 @@ async def get_market_history(
     # Lookup asset in DB
     asset = db.query(Asset).filter((Asset.symbol == symbol) | (Asset.symbol == symbol.replace("-", "/"))).first()
     if not asset:
-        # If not found directly, create on-the-fly or fallback
-        asset_type = "crypto" if "USDT" in symbol.upper() else "stock_idx" if symbol.endswith(".JK") else "stock_us"
         asset = Asset(
             symbol=symbol,
             name=symbol,
-            asset_type=asset_type,
-            base_currency="IDR" if asset_type == "stock_idx" else "USD"
+            asset_type="crypto",
+            base_currency="USD"
         )
         db.add(asset)
         db.commit()
@@ -129,7 +127,7 @@ async def get_tickers(
             ))
         else:
             # Fallback default estimate
-            default_price = 68000.0 if "BTC" in a.symbol else 3500.0 if "ETH" in a.symbol else 10100.0 if "BBCA" in a.symbol else 225.0
+            default_price = 68000.0 if "BTC" in a.symbol else 3500.0 if "ETH" in a.symbol else 150.0 if "SOL" in a.symbol else 550.0 if "BNB" in a.symbol else 1.0
             results.append(AssetItem(
                 id=a.id,
                 symbol=a.symbol,
@@ -151,7 +149,7 @@ async def get_tickers(
 
 @router.get("/comparison")
 async def get_market_comparison(
-    symbols: str = Query("BTC/USDT,ETH/USDT,BBCA.JK,NVDA"),
+    symbols: str = Query("BTC/USDT,ETH/USDT,SOL/USDT,BNB/USDT"),
     timeframe: str = Query("1d", pattern="^(15m|1h|4h|1d|1w)$"),
     limit: int = Query(90, ge=10, le=365),
     db: Session = Depends(get_db)

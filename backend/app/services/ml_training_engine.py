@@ -13,7 +13,7 @@ import joblib
 from sqlalchemy.orm import Session
 from app.models.asset import Asset
 from app.models.ohlcv import OHLCVBar
-from app.services.market_data import binance_klines, yf_history, is_crypto, is_idx, frame_to_bars, DataUnavailable
+from app.services.market_data import binance_klines, yf_history, is_crypto, frame_to_bars, DataUnavailable
 from app.services.quant_ml import fit_direction_model, conviction_tier
 from app.services.scraper_service import ScraperService
 

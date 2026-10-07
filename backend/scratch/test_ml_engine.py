@@ -10,7 +10,7 @@ import joblib
 from sqlalchemy.orm import Session
 from app.models.asset import Asset
 from app.services.scraper_service import ScraperService
-from app.services.market_data import binance_klines, yf_history, is_crypto, is_idx, frame_to_bars, DataUnavailable
+from app.services.market_data import binance_klines, yf_history, is_crypto, frame_to_bars, DataUnavailable
 from app.services.quant_ml import fit_direction_model, conviction_tier
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage")

@@ -29,7 +29,7 @@ class DataUnavailable(RuntimeError):
 
 
 def _slug(*parts: str) -> str:
-    return "_".join(p.replace("/", "").replace(".", "_").replace("^", "IDX_").replace("=", "_").replace("-", "_") for p in parts)
+    return "_".join(p.replace("/", "").replace(".", "_").replace("^", "_").replace("=", "_").replace("-", "_") for p in parts)
 
 
 def _cached(key: str, ttl_seconds: int, fetch: Callable[[Optional[pd.DataFrame]], pd.DataFrame]) -> pd.DataFrame:
@@ -182,10 +182,6 @@ def yf_history(symbol: str, period: str, interval: str, ttl_seconds: int = 900) 
 
 def is_crypto(symbol: str) -> bool:
     return "/" in symbol or symbol.upper().endswith("USDT")
-
-
-def is_idx(symbol: str) -> bool:
-    return symbol.endswith(".JK") or symbol == "^JKSE"
 
 
 def frame_to_bars(df: pd.DataFrame) -> list:

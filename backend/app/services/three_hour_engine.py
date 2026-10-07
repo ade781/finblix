@@ -11,7 +11,6 @@ import joblib
 from sqlalchemy.orm import Session
 from app.models.asset import Asset
 from app.services.scraper_service import ScraperService
-from app.services.market_data import binance_klines, yf_history, is_crypto, is_idx, frame_to_bars, DataUnavailable
 from app.services.quant_ml import fit_direction_model, conviction_tier
 from app.services.ml_training_engine import MLTrainingEngine
 
@@ -95,86 +94,18 @@ class ThreeHourPredictionEngine:
     def determine_market_session(asset: Asset) -> Dict[str, Any]:
         now_utc = datetime.now(timezone.utc)
         now_wib = now_utc + timedelta(hours=7)
-        symbol = asset.symbol
-        is_cr = is_crypto(symbol)
-        is_idx_sym = is_idx(symbol)
-
-        if is_cr:
-            target_utc = now_utc + timedelta(hours=3)
-            target_wib = now_wib + timedelta(hours=3)
-            return {
-                "status": "OPEN_24_7",
-                "badge": "PASAR AKTIF 24/7",
-                "is_open": True,
-                "session_name": "Perdagangan Kripto 24/7 Global",
-                "current_time_wib": now_wib.strftime("%H:%M WIB"),
-                "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "target_time_wib": target_wib.strftime("%H:%M WIB"),
-                "horizon_label": f"3 Jam ke Depan Real-time (12x 15 Menit: {now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
-            }
-        elif is_idx_sym:
-            weekday = now_wib.weekday()
-            current_minutes = now_wib.hour * 60 + now_wib.minute
-            is_weekday = weekday < 5
-            is_sesi_1 = False
-            is_sesi_2 = False
-
-            if is_weekday:
-                if weekday == 4:
-                    is_sesi_1 = 540 <= current_minutes < 690
-                    is_sesi_2 = 840 <= current_minutes < 960
-                else:
-                    is_sesi_1 = 540 <= current_minutes < 720
-                    is_sesi_2 = 810 <= current_minutes < 960
-
-            if is_sesi_1 or is_sesi_2:
-                target_utc = now_utc + timedelta(hours=3)
-                target_wib = now_wib + timedelta(hours=3)
-                return {
-                    "status": "REGULAR_OPEN",
-                    "badge": "BURSA IDX BUKA",
-                    "is_open": True,
-                    "session_name": "Sesi Perdagangan Reguler Bursa Efek Indonesia",
-                    "current_time_wib": now_wib.strftime("%H:%M WIB"),
-                    "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                    "target_time_wib": target_wib.strftime("%H:%M WIB"),
-                    "horizon_label": f"3 Jam Sesi Berjalan (12x 15 Menit: {now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
-                }
-            else:
-                days_to_add = 1
-                if weekday == 4: days_to_add = 3
-                elif weekday == 5: days_to_add = 2
-                elif weekday == 6: days_to_add = 1
-                elif current_minutes >= 960: days_to_add = 1 if weekday < 4 else 3
-                else: days_to_add = 0
-
-                next_date = now_wib + timedelta(days=days_to_add)
-                next_open = next_date.replace(hour=9, minute=0, second=0, microsecond=0)
-                next_target = next_date.replace(hour=12, minute=0, second=0, microsecond=0)
-
-                return {
-                    "status": "MARKET_CLOSED",
-                    "badge": "BURSA IDX TUTUP",
-                    "is_open": False,
-                    "session_name": "Bursa Tutup (Luar Jam Perdagangan Resmi)",
-                    "current_time_wib": now_wib.strftime("%H:%M WIB"),
-                    "target_time_utc": (next_target - timedelta(hours=7)).strftime("%Y-%m-%d %H:%M:%S UTC"),
-                    "target_time_wib": next_target.strftime("%H:%M WIB"),
-                    "horizon_label": f"Proyeksi Sesi Pembukaan (12x 15 Menit: {next_open.strftime('%d %b 09:00')} - 12:00 WIB)"
-                }
-        else:
-            target_utc = now_utc + timedelta(hours=3)
-            target_wib = now_wib + timedelta(hours=3)
-            return {
-                "status": "GLOBAL_MARKET",
-                "badge": "WALL STREET (US)",
-                "is_open": True,
-                "session_name": "Pasar Saham Global",
-                "current_time_wib": now_wib.strftime("%H:%M WIB"),
-                "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
-                "target_time_wib": target_wib.strftime("%H:%M WIB"),
-                "horizon_label": f"3 Jam ke Depan (12x 15 Menit: {now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
-            }
+        target_utc = now_utc + timedelta(hours=3)
+        target_wib = now_wib + timedelta(hours=3)
+        return {
+            "status": "OPEN_24_7",
+            "badge": "PASAR AKTIF 24/7",
+            "is_open": True,
+            "session_name": "Perdagangan Kripto 24/7 Global",
+            "current_time_wib": now_wib.strftime("%H:%M WIB"),
+            "target_time_utc": target_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "target_time_wib": target_wib.strftime("%H:%M WIB"),
+            "horizon_label": f"3 Jam ke Depan Real-time (12x 15 Menit: {now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
+        }
 
     @classmethod
     def _compute_features_core(cls, df: pd.DataFrame, daily_sentiment: float) -> pd.DataFrame:

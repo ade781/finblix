@@ -1,50 +1,50 @@
 {
   "symbol": "AAPL",
-  "trained_at": "2026-10-04 16:03:08 UTC",
+  "trained_at": "2026-10-04 17:12:55 UTC",
   "dataset_bars": 1255,
   "samples_trained": 659,
   "samples_tested": 241,
-  "training_duration_seconds": 230.82,
+  "training_duration_seconds": 320.9,
   "metrics": {
-    "train_accuracy_pct": 62.67,
-    "cv_5fold_mean_pct": 56.81,
-    "test_accuracy_pct": 52.7,
-    "roc_auc_pct": 49.78,
-    "hc_test_accuracy_pct": 44.44,
-    "hc_test_coverage_pct": 3.73
+    "train_accuracy_pct": 65.1,
+    "cv_5fold_mean_pct": 56.56,
+    "test_accuracy_pct": 51.45,
+    "roc_auc_pct": 47.07,
+    "hc_test_accuracy_pct": 25.0,
+    "hc_test_coverage_pct": 1.66
   },
   "top_features": [
     {
       "feature": "rsi_delta",
-      "importance": 2.488
-    },
-    {
-      "feature": "ret_1d_lag2",
-      "importance": 1.293
+      "importance": 2.156
     },
     {
       "feature": "rolling_vol_7d",
-      "importance": 0.976
+      "importance": 0.843
     },
     {
-      "feature": "ret_1d",
-      "importance": 0.92
-    },
-    {
-      "feature": "rsi_macd_divergence",
-      "importance": 0.912
+      "feature": "ret_1d_lag2",
+      "importance": 0.804
     },
     {
       "feature": "bb_width",
-      "importance": 0.803
+      "importance": 0.786
+    },
+    {
+      "feature": "rsi_macd_divergence",
+      "importance": 0.721
     },
     {
       "feature": "cmf_20",
-      "importance": 0.627
+      "importance": 0.682
+    },
+    {
+      "feature": "ret_1d",
+      "importance": 0.626
     },
     {
       "feature": "volume_ratio",
-      "importance": 0.62
+      "importance": 0.586
     }
   ],
   "model_architecture": "hgb_tuned",

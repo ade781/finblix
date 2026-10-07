@@ -1,51 +1,53 @@
 {
   "symbol": "ETH/USDT",
-  "target_horizon": "3_HOURS_15M_INTERVALS",
-  "training_window": "15M_CANDLES",
-  "dataset_bars": 17000,
-  "samples_trained": 8545,
-  "samples_tested": 3388,
-  "test_accuracy_pct": 52.63,
-  "cv_accuracy_pct": 55.95,
-  "roc_auc_pct": 51.1,
-  "hc_test_accuracy_pct": 52.78,
-  "hc_test_coverage_pct": 43.06,
+  "trained_at": "2026-10-04 17:11:35 UTC",
+  "dataset_bars": 5000,
+  "samples_trained": 2467,
+  "samples_tested": 988,
+  "training_duration_seconds": 267.74,
+  "metrics": {
+    "train_accuracy_pct": 57.28,
+    "cv_5fold_mean_pct": 51.9,
+    "test_accuracy_pct": 54.86,
+    "roc_auc_pct": 50.72,
+    "hc_test_accuracy_pct": 54.64,
+    "hc_test_coverage_pct": 86.13
+  },
   "top_features": [
     {
-      "feature": "dist_vwap",
-      "importance": 1.638
+      "feature": "cmf_20",
+      "importance": 1.446
     },
     {
-      "feature": "rolling_vol_12h",
-      "importance": 1.356
+      "feature": "bb_percent_b",
+      "importance": 1.279
     },
     {
-      "feature": "cos_time",
-      "importance": 0.761
+      "feature": "rolling_vol_30d",
+      "importance": 0.886
     },
     {
-      "feature": "rsi_15m",
-      "importance": 0.674
+      "feature": "news_sentiment",
+      "importance": 0.718
     },
     {
-      "feature": "bb_pct_b",
-      "importance": 0.607
+      "feature": "price_to_ema20",
+      "importance": 0.647
     },
     {
-      "feature": "day_sin",
-      "importance": 0.488
+      "feature": "trend_strength",
+      "importance": 0.337
     },
     {
-      "feature": "dist_ema50",
-      "importance": 0.398
+      "feature": "choppiness_index",
+      "importance": 0.335
     },
     {
-      "feature": "bb_width",
-      "importance": 0.376
+      "feature": "atr_norm",
+      "importance": 0.291
     }
   ],
-  "duration_seconds": 196.63,
-  "trained_at": "2026-10-04 16:20:23 UTC",
+  "model_architecture": "soft_vote",
   "status": "DEPLOYED_ACTIVE",
   "is_validated": false
 }
