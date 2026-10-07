@@ -1,5 +1,4 @@
 import os
-import sys
 import time
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional, Tuple
@@ -12,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.models.asset import Asset
 from app.services.scraper_service import ScraperService
 from app.services.quant_ml import fit_direction_model, conviction_tier
-from app.services.ml_training_engine import MLTrainingEngine
 from app.services.market_data import is_crypto, binance_klines, yf_history
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage")

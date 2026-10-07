@@ -1,6 +1,6 @@
 import os
-import sys
 import time
+import joblib
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta, timezone
@@ -9,13 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.models.asset import Asset
 from app.models.ohlcv import OHLCVBar
-from app.models.news import NewsArticle
-from app.services.ta_engine import TAEngine
 from app.services.crypto_service import CryptoService
 from app.services.scraper_service import ScraperService
-from app.services.sentiment_engine import SentimentEngine
 from app.services.ml_training_engine import MLTrainingEngine
-import joblib
 
 class DailyPredictionEngine:
     @staticmethod
@@ -397,14 +393,13 @@ class DailyPredictionEngine:
         ml_payload = joblib.load(model_path) if os.path.exists(model_path) else None
 
         ml_model = ml_payload.get("model") if ml_payload else None
-        scaler = ml_payload.get("scaler") if ml_payload else None
         features = ml_payload.get("features") if ml_payload else None
 
         df_time_map = {}
-        if ml_model and scaler and features:
+        if ml_model and features:
             try:
-                df_feats = MLTrainingEngine.build_feature_dataset(bars, fng_map, news_map)
-                df_time_map = {row["time"]: row for _, row in df_feats.iterrows()}
+                feat_df, _, _, _ = MLTrainingEngine.build_ml_features(pd.DataFrame(bars), fng_map, news_map)
+                df_time_map = {int(row["time"]): row for _, row in feat_df.iterrows()}
             except Exception:
                 df_time_map = {}
 
@@ -412,7 +407,6 @@ class DailyPredictionEngine:
         total = 0
         daily_log = []
 
-        is_crypto = (asset_type == "crypto")
         start_idx = len(bars) - days
 
         for i in range(start_idx, len(bars)):
@@ -432,19 +426,16 @@ class DailyPredictionEngine:
 
             # ML Probability
             ml_prob = None
-            if p_time in df_time_map and ml_model and scaler:
+            if p_time in df_time_map and ml_model:
                 try:
                     row_feat = df_time_map[p_time]
                     x_vec = np.array([[row_feat[f] for f in features]])
-                    ml_prob = float(ml_model.predict_proba(scaler.transform(x_vec))[0][1])
+                    ml_prob = float(ml_model.predict_proba(x_vec)[0][1])
                 except Exception:
                     ml_prob = None
 
-            # Quant inference
-            if is_crypto:
-                pred_res = cls._quant_predict_crypto(slice_bars, fng_v, n_s, ml_prob)
-            else:
-                pred_res = cls._quant_predict_equity(slice_bars, fng_v, n_s, ml_prob)
+            # Quant inference (Crypto 24/7)
+            pred_res = cls._quant_predict_crypto(slice_bars, fng_v, n_s, ml_prob)
 
             predicted_dir = pred_res["direction"]
             comp_score = pred_res["composite"]
