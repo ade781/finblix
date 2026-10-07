@@ -11,7 +11,7 @@ router = APIRouter()
 
 @router.get("/overview", response_model=TickersResponse)
 async def get_screener_overview(
-    category: Optional[str] = Query(None, description="crypto, stock_idx, stock_us, all"),
+    category: Optional[str] = Query(None, description="crypto, all"),
     sort_by: Optional[str] = Query("gainers", description="gainers, losers, volume"),
     db: Session = Depends(get_db)
 ):
@@ -51,7 +51,7 @@ async def get_screener_overview(
                 overall_signal=ta["overall_signal"]
             ))
         else:
-            default_price = 68000.0 if "BTC" in a.symbol else 3500.0 if "ETH" in a.symbol else 10100.0 if "BBCA" in a.symbol else 225.0
+            default_price = 68000.0 if "BTC" in a.symbol else 3500.0 if "ETH" in a.symbol else 150.0
             results.append(AssetItem(
                 id=a.id,
                 symbol=a.symbol,

@@ -8,7 +8,7 @@ class Asset(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     symbol = Column(String(30), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
-    asset_type = Column(String(20), nullable=False, index=True)  # crypto, stock_idx, stock_us, index, forex
+    asset_type = Column(String(20), nullable=False, index=True, default="crypto")  # crypto
     base_currency = Column(String(10), default="USD")
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, server_default=func.now())

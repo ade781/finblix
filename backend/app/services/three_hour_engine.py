@@ -485,8 +485,7 @@ class ThreeHourPredictionEngine:
     async def predict_3h_outlook(cls, db: Session, symbol: str) -> Dict[str, Any]:
         asset = db.query(Asset).filter((Asset.symbol == symbol) | (Asset.symbol == symbol.replace("-", "/"))).first()
         if not asset:
-            asset_type = "crypto" if "USDT" in symbol.upper() else "stock_idx" if symbol.endswith(".JK") else "stock_us"
-            asset = Asset(symbol=symbol, name=symbol, asset_type=asset_type, base_currency="IDR" if asset_type == "stock_idx" else "USD")
+            asset = Asset(symbol=symbol, name=symbol, asset_type="crypto", base_currency="USD")
             db.add(asset)
             db.commit()
             db.refresh(asset)
@@ -507,13 +506,13 @@ class ThreeHourPredictionEngine:
         session_info = cls.determine_market_session(asset)
 
         recent_news = ScraperService.get_recent_news_for_asset(db, symbol, limit=10)
-        news_source_type = "EMITEN_LANGSUNG"
+        news_source_type = "ASET_LANGSUNG"
         if len(recent_news) < 2:
-            fallback_sym = "^JKSE" if (symbol.endswith(".JK") or symbol == "^JKSE") else "BTC/USDT"
+            fallback_sym = "BTC/USDT"
             macro_news = ScraperService.get_recent_news_for_asset(db, fallback_sym, limit=10)
             if macro_news:
                 recent_news = macro_news
-                news_source_type = "MAKRO_IHSG_FALLBACK" if fallback_sym == "^JKSE" else "MAKRO_KRIPTO_FALLBACK"
+                news_source_type = "MAKRO_KRIPTO_FALLBACK"
         avg_sentiment = float(np.mean([float(n["sentiment_score"]) for n in recent_news])) if recent_news else 0.0
 
         model_path = os.path.join(MODELS_DIR, f"{slug}_15m_model.joblib")

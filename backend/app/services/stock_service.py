@@ -112,20 +112,12 @@ class StockService:
     @staticmethod
     def _generate_fallback_bars(symbol: str, count: int = 150) -> List[Dict[str, Any]]:
         # Fallback price anchor
-        if "BBCA" in symbol:
-            base_price = 10100.0
-        elif "BBRI" in symbol:
-            base_price = 5200.0
-        elif "TLKM" in symbol:
-            base_price = 3100.0
-        elif "NVDA" in symbol:
-            base_price = 125.0
-        elif "AAPL" in symbol:
-            base_price = 225.0
-        elif "TSLA" in symbol:
-            base_price = 250.0
-        elif "^JKSE" in symbol:
-            base_price = 7700.0
+        if "BTC" in symbol:
+            base_price = 68000.0
+        elif "ETH" in symbol:
+            base_price = 3500.0
+        elif "SOL" in symbol:
+            base_price = 175.0
         else:
             base_price = 100.0
 
