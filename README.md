@@ -1,4 +1,4 @@
-# Finblix - AI Market Prediction & Quantitative Analytics Engine
+# Finblix - AI Market Prediction & Quantitative Analytics
 
 Finblix adalah platform analitik finansial dan kecerdasan buatan kuantitatif berstandar institusional. Fokus utama platform ini adalah **Mesin Prediksi Arah Harian AI (Daily AI Prediction Engine)** yang memprediksi pergerakan harga instrumen finansial (Cryptocurrency dan Saham IHSG) untuk 24 jam ke depan dengan tingkat akurasi terverifikasi audit walk-forward.
 
