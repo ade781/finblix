@@ -5,7 +5,7 @@ from app.core.database import Base
 class TechnicalSnapshot(Base):
     __tablename__ = "technical_snapshots"
 
-    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, index=True, autoincrement=True)
     asset_id = Column(Integer, ForeignKey("assets.id", ondelete="CASCADE"), nullable=False, index=True)
     timeframe = Column(String(10), nullable=False)
     calculated_at = Column(DateTime, server_default=func.now())

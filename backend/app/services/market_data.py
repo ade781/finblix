@@ -32,14 +32,14 @@ def _slug(*parts: str) -> str:
     return "_".join(p.replace("/", "").replace(".", "_").replace("^", "_").replace("=", "_").replace("-", "_") for p in parts)
 
 
-def _cached(key: str, ttl_seconds: int, fetch: Callable[[Optional[pd.DataFrame]], pd.DataFrame]) -> pd.DataFrame:
+def _cached(key: str, ttl_seconds: int, fetch: Callable[[Optional[pd.DataFrame]], pd.DataFrame], min_bars: int = 0) -> pd.DataFrame:
     """Disk cache. `fetch` receives the cached frame (or None) so it can fetch incrementally."""
     path = os.path.join(CACHE_DIR, f"{key}.pkl")
     cached = None
     if os.path.exists(path):
         try:
             cached = pd.read_pickle(path)
-            if time.time() - os.path.getmtime(path) < ttl_seconds:
+            if (time.time() - os.path.getmtime(path) < ttl_seconds) and (len(cached) >= min_bars):
                 return cached
         except Exception:
             cached = None
@@ -112,7 +112,7 @@ def binance_klines(symbol: str, interval: str, lookback_bars: int, ttl_seconds: 
             out = _fetch_klines_range(symbol, interval, max(0, want_start))
         return out.sort_values("time").reset_index(drop=True)
 
-    df = _cached(key, ttl_seconds, fetch)
+    df = _cached(key, ttl_seconds, fetch, min_bars=lookback_bars)
     if closed_only:
         df = df[df["close_time"] < time.time()]
     df = df.tail(lookback_bars).reset_index(drop=True)

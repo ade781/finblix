@@ -5,7 +5,7 @@ from app.core.database import Base
 class NewsArticle(Base):
     __tablename__ = "news_articles"
 
-    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, index=True, autoincrement=True)
     title = Column(String(255), nullable=False)
     source = Column(String(100), nullable=False)
     article_url = Column(String(500), unique=True, nullable=False)

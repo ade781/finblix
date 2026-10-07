@@ -16,6 +16,7 @@ Pipeline (fit_direction_model):
   8. Deployed model is refit on train+test with the same recipe.
 """
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
+import time
 
 import numpy as np
 import pandas as pd
@@ -117,47 +118,81 @@ def candidate_models(n_train: int, random_state: int = 42) -> Dict[str, Any]:
         'l2_regularization': [0.0, 1.0, 5.0, 10.0]
     }
     
-    # RandomizedSearchCV to find optimal parameters within candidate selection
-    tuned_hgb = RandomizedSearchCV(
-        hgb_base, param_distributions=param_dist, n_iter=8, 
-        cv=3, scoring='roc_auc', n_jobs=1, random_state=random_state
-    )
-    
-    # Use Feature Selection + RandomForest to filter out noisy features
-    rf_base = RandomForestClassifier(
-        n_estimators=300, max_depth=4, min_samples_leaf=leaf, max_features="sqrt",
-        n_jobs=1, random_state=random_state, class_weight='balanced'
-    )
-    
-    # The pipeline will first drop useless features using a meta-RF, then train the actual RF
-    rf = make_pipeline(
-        SelectFromModel(RandomForestClassifier(n_estimators=50, random_state=random_state, n_jobs=1)),
-        rf_base
-    )
-    
-    # Simple hardcoded HGB as fallback
-    hgb_simple = HistGradientBoostingClassifier(
-        learning_rate=0.03, max_iter=150, max_depth=3, max_leaf_nodes=8,
-        min_samples_leaf=leaf, l2_regularization=5.0, random_state=random_state,
+    # Fast regularized HistGBM
+    hgb_fast = HistGradientBoostingClassifier(
+        learning_rate=0.03, max_iter=160, max_depth=4, max_leaf_nodes=12,
+        min_samples_leaf=leaf, l2_regularization=4.0, random_state=random_state,
         class_weight='balanced'
     )
 
-    vote = VotingClassifier([("lr", clone(logreg)), ("hgb", clone(hgb_simple)), ("rf", clone(rf))], voting="soft")
-    
+    # Random Forest with shallow depth to avoid overfitting
+    rf = RandomForestClassifier(
+        n_estimators=200, max_depth=4, min_samples_leaf=leaf, max_features="sqrt",
+        n_jobs=1, random_state=random_state, class_weight='balanced'
+    )
+
+    models_dict = {
+        "logreg": logreg,
+        "hist_gbm": hgb_fast,
+        "rf": rf,
+    }
+
+    # Add SOTA LightGBM & XGBoost
+    lgb_model = None
+    try:
+        import lightgbm as lgb
+        lgb_model = lgb.LGBMClassifier(
+            n_estimators=180, learning_rate=0.03, max_depth=4, num_leaves=12,
+            min_child_samples=max(15, leaf // 2), subsample=0.85, colsample_bytree=0.85,
+            reg_alpha=0.5, reg_lambda=2.0, random_state=random_state, verbosity=-1
+        )
+        models_dict["lightgbm"] = lgb_model
+    except Exception:
+        pass
+
+    xgb_model = None
+    try:
+        import xgboost as xgb
+        xgb_model = xgb.XGBClassifier(
+            n_estimators=180, learning_rate=0.03, max_depth=3, subsample=0.85,
+            colsample_bytree=0.85, reg_alpha=0.5, reg_lambda=3.0,
+            random_state=random_state, eval_metric="logloss"
+        )
+        models_dict["xgboost"] = xgb_model
+    except Exception:
+        pass
+
+    # Soft Voting Ensemble
+    if lgb_model is not None and xgb_model is not None:
+        vote = VotingClassifier([
+            ("lgb", clone(lgb_model)),
+            ("xgb", clone(xgb_model)),
+            ("hgb", clone(hgb_fast))
+        ], voting="soft")
+    else:
+        vote = VotingClassifier([
+            ("lr", clone(logreg)),
+            ("hgb", clone(hgb_fast)),
+            ("rf", clone(rf))
+        ], voting="soft")
+    models_dict["soft_vote"] = vote
+
+    # Stacking Classifier
     from sklearn.ensemble import StackingClassifier
+    stack_estimators = [("hgb", clone(hgb_fast)), ("rf", clone(rf))]
+    if lgb_model is not None:
+        stack_estimators.append(("lgb", clone(lgb_model)))
+    if xgb_model is not None:
+        stack_estimators.append(("xgb", clone(xgb_model)))
+
     stacking = StackingClassifier(
-        estimators=[("lr", clone(logreg)), ("hgb", clone(hgb_simple)), ("rf", clone(rf))],
-        final_estimator=LogisticRegression(C=0.1),
+        estimators=stack_estimators,
+        final_estimator=LogisticRegression(C=0.1, max_iter=1000),
         cv=3, n_jobs=1
     )
-    
-    return {
-        "logreg": logreg, 
-        "hgb_tuned": tuned_hgb, 
-        "rf": rf, 
-        "soft_vote": vote,
-        "stacking": stacking
-    }
+    models_dict["stacking"] = stacking
+
+    return models_dict
 
 
 def _safe_auc(y, p) -> float:
@@ -276,7 +311,9 @@ def _fit_recipe(X: pd.DataFrame, y: np.ndarray, pos: np.ndarray, horizon: int, n
         raise ValueError(f"Not enough data for purged CV ({len(X)} samples)")
 
     if fixed_features is None:
+        print(f"   [ML] Selecting top features from {len(X.columns)} candidate columns across {len(splits)} folds...")
         features, ranking = select_features(X, y, splits, max_features=max_features, random_state=random_state)
+        print(f"   [ML] Selected {len(features)} features: {features[:5]}...")
     else:
         features, ranking = fixed_features, []
     Xs = X[features].values
@@ -285,11 +322,16 @@ def _fit_recipe(X: pd.DataFrame, y: np.ndarray, pos: np.ndarray, horizon: int, n
     cv_scores: Dict[str, Dict[str, float]] = {}
     oof_cache: Dict[str, Tuple[np.ndarray, np.ndarray]] = {}
     names = [fixed_model] if fixed_model else list(cands.keys())
+    print(f"   [ML] Evaluating {len(names)} candidate model architectures...")
     for name in names:
+        t_cand = time.time()
         idx, p = oof_predict(cands[name], Xs, y, splits)
         oof_cache[name] = (idx, p)
         cv_scores[name] = {"auc": _safe_auc(y[idx], p), "accuracy": float(accuracy_score(y[idx], p >= 0.5))}
-    best = max(names, key=lambda n: (round(cv_scores[n]["auc"], 3), cv_scores[n]["accuracy"]))
+        print(f"      -> {name:<12}: AUC={cv_scores[name]['auc']*100:.2f}%, Acc={cv_scores[name]['accuracy']*100:.2f}% ({time.time()-t_cand:.2f}s)")
+    # Composite score prioritizing directional accuracy while rewarding high discriminative AUC
+    best = max(names, key=lambda n: (cv_scores[n]["accuracy"] * 0.6 + cv_scores[n]["auc"] * 0.4))
+    print(f"   [ML] Winner Architecture: {best}")
 
     idx, raw = oof_cache[best]
     a, b = fit_platt(raw, y[idx])

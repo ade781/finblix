@@ -26,6 +26,43 @@ class MLTrainingEngine:
     def _slugify(symbol: str) -> str:
         return symbol.replace("/", "_").replace(".", "_").replace("-", "_")
 
+    @staticmethod
+    def calc_fractional_diff(series: pd.Series, d: float = 0.40, threshold: float = 1e-4) -> pd.Series:
+        weights = [1.0]
+        k = 1
+        while True:
+            w = -weights[-1] / k * (d - k + 1)
+            if abs(w) < threshold or k > 35:
+                break
+            weights.append(w)
+            k += 1
+        weights = np.array(weights[::-1])
+        s_vals = series.values
+        res = np.convolve(s_vals, weights, mode='valid')
+        pad = len(s_vals) - len(res)
+        return pd.Series(np.pad(res, (pad, 0), mode='edge'), index=series.index)
+
+    @staticmethod
+    def calc_corwin_schultz_spread(high: pd.Series, low: pd.Series) -> pd.Series:
+        high_prev = high.shift(1).bfill()
+        low_prev = low.shift(1).bfill()
+        beta = (np.log(high / low.replace(0, 1e-9)))**2 + (np.log(high_prev / low_prev.replace(0, 1e-9)))**2
+        h_max = np.maximum(high, high_prev)
+        l_min = np.minimum(low, low_prev)
+        gamma = (np.log(h_max / l_min.replace(0, 1e-9)))**2
+        k = 3.0 - (2.0 * np.sqrt(2.0))
+        alpha = (np.sqrt(2.0 * beta) - np.sqrt(beta)) / k - np.sqrt(gamma / k)
+        exp_alpha = np.exp(alpha)
+        spread = 2.0 * (exp_alpha - 1.0) / (1.0 + exp_alpha)
+        return spread.clip(lower=0.0, upper=0.15).fillna(0.0)
+
+    @staticmethod
+    def calc_garman_klass_vol(high: pd.Series, low: pd.Series, close: pd.Series, open_p: pd.Series, window: int = 14) -> pd.Series:
+        log_hl = np.log(high / low.replace(0, 1e-9))
+        log_co = np.log(close / open_p.replace(0, 1e-9))
+        rs = 0.5 * (log_hl ** 2) - (2.0 * np.log(2.0) - 1.0) * (log_co ** 2)
+        return np.sqrt(rs.rolling(window).mean()).fillna(0.0)
+
     _fng_cache = {}
     _loaded_models = {}
 
@@ -173,9 +210,18 @@ class MLTrainingEngine:
         
         df["rolling_vol_7d"] = df["ret_1d"].rolling(7).std().fillna(0)
         df["rolling_vol_30d"] = df["ret_1d"].rolling(30).std().fillna(0)
-        
         df["ret_1d_lag1"] = df["ret_1d"].shift(1).fillna(0)
         df["ret_1d_lag2"] = df["ret_1d"].shift(2).fillna(0)
+        
+        # SOTA Quantitative & Microstructure Features
+        df["garman_klass_vol"] = cls.calc_garman_klass_vol(high, low, close, open_p)
+        df["corwin_schultz"] = cls.calc_corwin_schultz_spread(high, low)
+        df["frac_diff_close"] = cls.calc_fractional_diff(np.log(close.replace(0, 1e-9)), d=0.40)
+        df["amihud_illiq"] = (df["ret_1d"].abs() / (vol * close * 1e-6 + 1e-9)).clip(upper=10.0)
+        df["ofip"] = ((close - open_p) / c_range) * np.log1p(vol)
+        ema200 = close.ewm(span=min(len(close), 200), adjust=False).mean()
+        df["dist_ema200"] = (close - ema200) / (close + 1e-9)
+        df["ema_alignment"] = ((ema9 > ema20).astype(int) + (ema20 > ema50).astype(int) + (ema50 > ema100).astype(int) + (ema100 > ema200).astype(int)) / 4.0
 
         return df
 
@@ -196,7 +242,7 @@ class MLTrainingEngine:
             "upper_wick", "lower_wick", "body_ratio",
             "ret_1d", "ret_3d", "ret_7d", "ret_14d", "ret_30d",
             "price_to_ema20", "price_to_ema50", "ema20_to_ema50",
-            "price_to_weekly_ema", "ema9_slope",
+            "price_to_weekly_ema", "ema9_slope", "dist_ema200", "ema_alignment",
             "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
             "choppiness_index", "cmf_20", "obv_slope", "adx_14",
@@ -204,7 +250,8 @@ class MLTrainingEngine:
             "day_of_week", "bb_width_roc", "vol_roc", "rsi_macd_divergence",
             "atr_ratio", "trend_strength",
             "day_sin", "day_cos", "rolling_vol_7d", "rolling_vol_30d",
-            "ret_1d_lag1", "ret_1d_lag2"
+            "ret_1d_lag1", "ret_1d_lag2",
+            "garman_klass_vol", "corwin_schultz", "frac_diff_close", "amihud_illiq", "ofip"
         ]
 
         fwd_ret = (df["close"].shift(-horizon) / df["close"]) - 1.0
@@ -233,7 +280,7 @@ class MLTrainingEngine:
             "upper_wick", "lower_wick", "body_ratio",
             "ret_1d", "ret_3d", "ret_7d", "ret_14d", "ret_30d",
             "price_to_ema20", "price_to_ema50", "ema20_to_ema50",
-            "price_to_weekly_ema", "ema9_slope",
+            "price_to_weekly_ema", "ema9_slope", "dist_ema200", "ema_alignment",
             "rsi_14", "rsi_delta", "macd_hist", "macd_accel",
             "bb_percent_b", "bb_width", "atr_norm", "volume_ratio",
             "choppiness_index", "cmf_20", "obv_slope", "adx_14",
@@ -241,7 +288,8 @@ class MLTrainingEngine:
             "day_of_week", "bb_width_roc", "vol_roc", "rsi_macd_divergence",
             "atr_ratio", "trend_strength",
             "day_sin", "day_cos", "rolling_vol_7d", "rolling_vol_30d",
-            "ret_1d_lag1", "ret_1d_lag2"
+            "ret_1d_lag1", "ret_1d_lag2",
+            "garman_klass_vol", "corwin_schultz", "frac_diff_close", "amihud_illiq", "ofip"
         ]
         
         if is_training:

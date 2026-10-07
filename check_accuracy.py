@@ -52,7 +52,7 @@ def check_stored_ml_models():
 
 async def evaluate_live_predictions():
     db = SessionLocal()
-    assets_to_test = ['BTC/USDT', 'ETH/USDT', 'BBCA.JK', 'BBRI.JK']
+    assets_to_test = ['BTC/USDT']
     
     print("\n" + "=" * 95)
     print("2. AUDIT PREDIKSI HARIAN (DAILY ENGINE 30 HARI - ALL DAYS VS HIGH-CONVICTION)")

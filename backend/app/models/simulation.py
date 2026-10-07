@@ -18,7 +18,7 @@ class VirtualPortfolio(Base):
 class VirtualTrade(Base):
     __tablename__ = "virtual_trades"
 
-    id = Column(BigInteger, primary_key=True, index=True, autoincrement=True)
+    id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, index=True, autoincrement=True)
     portfolio_id = Column(Integer, ForeignKey("virtual_portfolios.id", ondelete="CASCADE"), nullable=False, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id", ondelete="CASCADE"), nullable=False, index=True)
     trade_type = Column(String(10), nullable=False)   # buy, sell

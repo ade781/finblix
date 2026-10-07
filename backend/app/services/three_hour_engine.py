@@ -13,6 +13,7 @@ from app.models.asset import Asset
 from app.services.scraper_service import ScraperService
 from app.services.quant_ml import fit_direction_model, conviction_tier
 from app.services.ml_training_engine import MLTrainingEngine
+from app.services.market_data import is_crypto, binance_klines, yf_history
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage")
 os.makedirs(MODELS_DIR, exist_ok=True)
@@ -107,6 +108,13 @@ class ThreeHourPredictionEngine:
             "horizon_label": f"3 Jam ke Depan Real-time (12x 15 Menit: {now_wib.strftime('%H:%M')} s/d {target_wib.strftime('%H:%M WIB')})"
         }
 
+    @staticmethod
+    def calc_garman_klass_vol(high: pd.Series, low: pd.Series, close: pd.Series, open_p: pd.Series, window: int = 14) -> pd.Series:
+        log_hl = np.log(high / low.replace(0, 1e-9))
+        log_co = np.log(close / open_p.replace(0, 1e-9))
+        rs = 0.5 * (log_hl ** 2) - (2.0 * np.log(2.0) - 1.0) * (log_co ** 2)
+        return np.sqrt(rs.rolling(window).mean()).fillna(0.0)
+
     @classmethod
     def _compute_features_core(cls, df: pd.DataFrame, daily_sentiment: float) -> pd.DataFrame:
         df = df.copy()
@@ -137,15 +145,22 @@ class ThreeHourPredictionEngine:
         atr14 = tr.rolling(14).mean()
         df["atr_norm"] = atr14 / (close + 1e-9)
         df["parkinson_vol"] = np.sqrt(((high - low)**2) / (4.0 * np.log(2.0) * (close**2) + 1e-12))
+        df["garman_klass_vol"] = cls.calc_garman_klass_vol(high, low, close, open_p)
 
         ema9 = close.ewm(span=9, adjust=False).mean()
         ema21 = close.ewm(span=21, adjust=False).mean()
         ema50 = close.ewm(span=50, adjust=False).mean()
+        ema_1h = close.ewm(span=36, adjust=False).mean() # ~9 hour multi-timeframe anchor
+        ema_4h = close.ewm(span=96, adjust=False).mean() # ~24 hour / 1-day multi-timeframe anchor
+        
         df["dist_ema9"] = (close - ema9) / (close + 1e-9)
         df["dist_ema21"] = (close - ema21) / (close + 1e-9)
         df["dist_ema50"] = (close - ema50) / (close + 1e-9)
+        df["dist_ema_1h"] = (close - ema_1h) / (close + 1e-9)
+        df["dist_ema_4h"] = (close - ema_4h) / (close + 1e-9)
         df["ema9_slope"] = ema9.pct_change(1).fillna(0)
         df["ribbon_bullish"] = ((ema9 > ema21) & (ema21 > ema50)).astype(int)
+        df["mtf_confluence"] = ((close > ema9).astype(int) + (ema9 > ema21).astype(int) + (close > ema_1h).astype(int) + (close > ema_4h).astype(int)) / 4.0
 
         cum_vol = vol.rolling(96, min_periods=1).sum()
         cum_val = (((high + low + close) / 3.0) * vol).rolling(96, min_periods=1).sum()
@@ -199,11 +214,9 @@ class ThreeHourPredictionEngine:
         df["trend_strength"] = (close - ema50).abs() / (atr14 + 1e-9)
 
         # SOTA Feature Engineering (Cyclical Encoding & Lags & Rolling Volatility)
-        # SOTA Feature Engineering (Cyclical Encoding & Lags & Rolling Volatility)
         if "date_obj" in df.columns:
             day_of_week = df["date_obj"].dt.weekday
         elif "time" in df.columns:
-            # Handle both seconds and milliseconds unix timestamps
             is_ms = df["time"].max() > 1e11
             dt_series = pd.to_datetime(df["time"], unit='ms' if is_ms else 's')
             day_of_week = dt_series.dt.weekday
@@ -245,7 +258,8 @@ class ThreeHourPredictionEngine:
             "corwin_schultz", "frac_diff_close", "amihud_illiq", "ofip",
             "bb_width_roc", "vol_roc", "rsi_macd_divergence", "atr_ratio", "trend_strength",
             "session_asian", "session_london", "session_us",
-            "day_sin", "day_cos", "rolling_vol_12h", "rolling_vol_24h", "ret_15m_lag1", "ret_15m_lag2"
+            "day_sin", "day_cos", "rolling_vol_12h", "rolling_vol_24h", "ret_15m_lag1", "ret_15m_lag2",
+            "garman_klass_vol", "dist_ema_1h", "dist_ema_4h", "mtf_confluence"
         ]
         
         # Horizon is 12 (12 * 15m = 3h)
@@ -282,8 +296,8 @@ class ThreeHourPredictionEngine:
         
         # 1. Fetch 15m bars
         if is_crypto(symbol):
-            # ~6 months for 15m is ~17500 bars
-            df = binance_klines(symbol, interval="15m", lookback_bars=17000)
+            # ~80 days of 15m data (~8,000 bars)
+            df = binance_klines(symbol, interval="15m", lookback_bars=8000)
         else:
             df = yf_history(symbol, period="60d", interval="15m")
             
@@ -518,7 +532,7 @@ class ThreeHourPredictionEngine:
         model_path = os.path.join(MODELS_DIR, f"{slug}_15m_model.joblib")
         if not os.path.exists(model_path):
             try:
-                await MLTrainingEngine.train_model_for_asset(db, symbol, interval="15m", horizon=12)
+                await cls.train_7d_model(db, symbol)
             except Exception as e:
                 print(f"[3HEngine] Auto-train 15m warning: {e}")
 
