@@ -12,6 +12,7 @@ export default function StatCards({ symbol, assetData, indicators, bars = [] }) 
   const lastPrice = indicators?.last_price || assetData?.last_price || 0;
   const change24h = indicators?.change_24h_percent ?? assetData?.change_24h_percent ?? 0;
   const isPositive = change24h >= 0;
+  const isIdr = assetData?.base_currency === 'IDR' || symbol?.endsWith('.JK');
 
   // Signal formatting
   const signal = indicators?.overall_signal || 'neutral';
@@ -52,7 +53,7 @@ export default function StatCards({ symbol, assetData, indicators, bars = [] }) 
           </div>
         </div>
         <div className="text-2xl sm:text-3xl font-bold font-mono text-white mb-2">
-          ${lastPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+          {isIdr ? `Rp ${lastPrice?.toLocaleString('id-ID')}` : `$${lastPrice?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}
         </div>
         <div className="flex items-center space-x-2">
           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium font-mono border ${

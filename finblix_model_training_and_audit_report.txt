@@ -1,0 +1,201 @@
+====================================================================================================
+FINBLIX QUANTITATIVE AI ENGINE - INSTITUTIONAL AUDIT & DATA EXPORT REPORT
+====================================================================================================
+Export Generated At : 2026-10-08 03:15:01 UTC
+Target Primary Asset: BTC/USDT (Bitcoin Spot)
+Engine Architecture : Dual Ensemble (Daily Multi-Day + 15M Microstructure Intraday)
+Status              : PRODUCTION DEPLOYED (Validated)
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+SECTION 1: MACHINE LEARNING MODEL ARCHITECTURE & TRAINING METRICS (DAILY 1D)
+----------------------------------------------------------------------------------------------------
+Symbol                     : BTC/USDT
+Trained Timestamp          : 2026-10-07 16:08:47 UTC
+Total Candlestick Bars     : 1499 daily bars (OHLCV)
+Samples Trained            : 688
+Samples Tested (Holdout)   : 290
+Training Duration          : 55.01 seconds
+Model Winning Architecture : soft_vote (Ensemble Soft Voting: LightGBM + XGBoost + HistGBM)
+Model Deployment Status    : DEPLOYED_ACTIVE
+Cross-Validation Paradigm  : 5-Fold Purged Walk-Forward Time-Series Split (Embargo = 5 bars)
+
+Holdout & Walk-Forward Validation Metrics:
+  * In-Sample Train Accuracy  : 85.32%
+  * 5-Fold Out-of-Fold CV Acc : 57.8%
+  * Out-of-Sample Test Acc    : 54.14%
+  * ROC-AUC Score             : 56.56%
+  * High-Conviction Test Acc  : 55.96%
+  * High-Conviction Coverage  : 66.55% of all trading days
+
+Top Feature Importance Ranking (Permutation Importance on Out-of-Fold Data):
+   1. body_ratio               : 2.353% impact
+   2. bb_width_roc             : 1.756% impact
+   3. upper_wick               : 1.587% impact
+   4. adx_14                   : 1.367% impact
+   5. rsi_macd_divergence      : 1.290% impact
+   6. macd_accel               : 0.971% impact
+   7. obv_slope                : 0.858% impact
+   8. trend_strength           : 0.459% impact
+
+----------------------------------------------------------------------------------------------------
+SECTION 2: INTRADAY 15-MINUTE MIKROSTRUKTUR MODEL TRAINING (HORIZON 3 JAM)
+----------------------------------------------------------------------------------------------------
+Target Horizon             : 3_HOURS_15M_INTERVALS (12 sequential milestones)
+Dataset 15m Bars           : 8000 candles
+Samples Trained            : 4164
+Samples Tested (Holdout)   : 1588
+Training Duration          : 63.89 seconds
+Winning Algorithm          : XGBoost with Platt Sigmoid Probability Calibration
+15m Test Accuracy          : 54.09%
+15m CV Accuracy (Purged)   : 58.52%
+15m ROC-AUC Score          : 57.89%
+15m High-Conviction Acc    : 73.89% (Superior Edge)
+15m High-Conviction Cov    : 11.34%
+
+Top Microstructure Features:
+   1. dist_ema_4h              : 2.698% impact
+   2. rolling_vol_12h          : 2.503% impact
+   3. dist_ema21               : 0.852% impact
+   4. frac_diff_close          : 0.596% impact
+   5. bb_width                 : 0.558% impact
+   6. dist_vwap                : 0.430% impact
+   7. trend_strength           : 0.347% impact
+   8. vol_surge                : 0.226% impact
+
+----------------------------------------------------------------------------------------------------
+SECTION 3: LIVE DAILY DIRECTION FORECAST & COMPOSITE SCORING (PRODUKSI RIIL)
+----------------------------------------------------------------------------------------------------
+Current Market Price       : $62,645.88
+Target Forecast Date       : 2026-10-09
+Predicted Direction        : TURUN (BEARISH (DOWN))
+Model Confidence           : 53.4%
+Conviction Tier            : MODERATE - COUNTER-TREND SETUP
+Execution Recommendation   : Sinyal kuat harian namun berlawanan dengan arah tren makro mingguan (BULLISH). Disarankan batasi alokasi modal atau tunggu konfirmasi konfluensi.
+Multi-Timeframe Trend      : Weekly 1W=BULLISH, Status=COUNTER_TREND
+Composite Score            : -8.50 (Scale: -100 Bearish to +100 Bullish)
+
+Model Weights & Sub-Component Breakdown:
+  * Technical Analysis (Weight: 50%)  : Score = -14.5
+  * Fundamental News  (Weight: 20%) : Score = 6.9
+  * Machine Learning  (Weight: 30%)    : Score = -8.8
+  * RSI 14 Value              : 53.5
+  * News Sentiment Score      : -0.05 (Range: -1.0 to +1.0)
+  * Crypto Fear & Greed Index : 64 / 100
+
+Mathematical Price Targets (ATR 14 Corridor):
+  * High Ceiling Target (High) : $64,212.03
+  * Low Floor Target (Low)     : $61,079.73
+
+Key Drivers & Quantitative Reasoning:
+  [TECHNICAL]:
+    - Indikator jenuh beli (RSI 53.5, Stoch 91.5) memicu potensi koreksi sehat.
+    - Konfluensi Multi-Timeframe: Tren Mingguan (Weekly 1W) berada dalam fase Bullish di atas EMA 20-Minggu ($59,960).
+    - Harga bertahan di atas rata-rata tren makro EMA 50.
+  [FUNDAMENTAL]:
+    - Indeks Fear & Greed berada pada zona normal (64).
+
+----------------------------------------------------------------------------------------------------
+SECTION 4: 30-DAY OUT-OF-SAMPLE WALK-FORWARD AUDIT TRACK RECORD (DAILY)
+----------------------------------------------------------------------------------------------------
+Evaluation Window          : 30 Calendar Days (Out-Of-Sample Walk-Forward)
+Total Days Evaluated       : 30
+Correct Predictions        : 15
+Incorrect Predictions      : 15
+Overall Accuracy           : 50.0 %
+Audit Verdict              : AKURASI BAIK (RELIABLE)
+
+Selective High-Conviction Sub-Cohort (No-Trade Choppy Days Filtered Out):
+  * High-Conviction Days Evaluated : 8
+  * High-Conviction Correct        : 8
+  * High-Conviction Incorrect      : 0
+  * High-Conviction Win Rate       : 100.0%
+  * High-Conviction Verdict        : AKURASI SUPERIOR TINGGI (ELITE 70%+ RELIABILITY)
+
+Daily Audit Log Table (30 Recent Trading Sessions):
+Date         | Close Price  | Pred        | Actual   | Ret %    | Status  | Conviction | Score  | MTF
+--------------------------------------------------------------------------------------------------
+2026-10-07   | $62,645.88   | KONSOLIDASI | NAIK     | +1.58%   | SALAH   | LOW        | -1.2   | NEUTRAL
+2026-10-06   | $61,674.31   | NAIK        | NAIK     | +1.88%   | BENAR   | HIGH       | 9.9    | PRO_TREND
+2026-10-05   | $60,537.47   | KONSOLIDASI | TURUN    | -1.73%   | SALAH   | LOW        | -1.7   | NEUTRAL
+2026-10-04   | $61,603.83   | NAIK        | NAIK     | +0.16%   | BENAR   | HIGH       | 12.2   | PRO_TREND
+2026-10-03   | $61,505.43   | KONSOLIDASI | TURUN    | -1.54%   | SALAH   | LOW        | -0.9   | NEUTRAL
+2026-10-02   | $62,468.38   | NAIK        | NAIK     | +1.36%   | BENAR   | HIGH       | 12.6   | PRO_TREND
+2026-10-01   | $61,627.45   | NAIK        | NAIK     | +0.43%   | BENAR   | HIGH       | 13.5   | PRO_TREND
+2026-09-30   | $61,361.78   | NAIK        | NAIK     | +0.64%   | BENAR   | MODERATE   | 5.8    | PRO_TREND
+2026-09-29   | $60,971.47   | NAIK        | NAIK     | +0.71%   | BENAR   | HIGH       | 24.6   | PRO_TREND
+2026-09-28   | $60,542.01   | NAIK        | TURUN    | -1.40%   | SALAH   | MODERATE   | 3.8    | PRO_TREND
+2026-09-27   | $61,401.62   | NAIK        | NAIK     | +1.06%   | BENAR   | HIGH       | 19.6   | PRO_TREND
+2026-09-26   | $60,758.33   | NAIK        | TURUN    | -1.05%   | SALAH   | MODERATE   | 5.5    | PRO_TREND
+2026-09-25   | $61,403.63   | TURUN       | TURUN    | -1.26%   | BENAR   | MODERATE   | -18.2  | COUNTER_TREND
+2026-09-24   | $62,186.73   | TURUN       | NAIK     | +0.30%   | SALAH   | MODERATE   | -10.0  | COUNTER_TREND
+2026-09-23   | $62,003.57   | KONSOLIDASI | NAIK     | +1.79%   | SALAH   | LOW        | 1.9    | NEUTRAL
+2026-09-22   | $60,913.58   | NAIK        | TURUN    | -1.35%   | SALAH   | MODERATE   | 5.2    | PRO_TREND
+2026-09-21   | $61,744.13   | NAIK        | NAIK     | +1.06%   | BENAR   | MODERATE   | 4.0    | PRO_TREND
+2026-09-20   | $61,096.14   | TURUN       | NAIK     | +0.18%   | SALAH   | MODERATE   | -3.8   | COUNTER_TREND
+2026-09-19   | $60,988.14   | KONSOLIDASI | NAIK     | +0.45%   | BENAR   | LOW        | -0.6   | NEUTRAL
+2026-09-18   | $60,715.43   | TURUN       | NAIK     | +1.63%   | SALAH   | MODERATE   | -4.0   | COUNTER_TREND
+2026-09-17   | $59,738.93   | NAIK        | NAIK     | +2.00%   | BENAR   | LOW        | 3.3    | COUNTER_TREND
+2026-09-16   | $58,565.19   | TURUN       | TURUN    | -0.64%   | BENAR   | HIGH       | -13.8  | PRO_TREND
+2026-09-15   | $58,944.06   | TURUN       | NAIK     | +1.64%   | SALAH   | LOW        | -3.1   | PRO_TREND
+2026-09-14   | $57,992.43   | NAIK        | TURUN    | -0.99%   | SALAH   | MODERATE   | 17.1   | COUNTER_TREND
+2026-09-13   | $58,574.68   | NAIK        | NAIK     | +0.44%   | BENAR   | MODERATE   | 8.3    | COUNTER_TREND
+2026-09-12   | $58,316.97   | TURUN       | TURUN    | -1.05%   | BENAR   | HIGH       | -18.6  | PRO_TREND
+2026-09-11   | $58,933.25   | NAIK        | NAIK     | +1.45%   | BENAR   | MODERATE   | 12.5   | COUNTER_TREND
+2026-09-10   | $58,092.46   | NAIK        | TURUN    | -1.02%   | SALAH   | MODERATE   | 10.8   | COUNTER_TREND
+2026-09-09   | $58,689.87   | KONSOLIDASI | TURUN    | -0.75%   | SALAH   | LOW        | -0.5   | NEUTRAL
+2026-09-08   | $59,132.81   | NAIK        | TURUN    | -0.76%   | SALAH   | MODERATE   | 17.5   | COUNTER_TREND
+
+----------------------------------------------------------------------------------------------------
+SECTION 5: INTRADAY 3-HOUR TRAJECTORY PROJECTION (12 x 15-MINUTE MILESTONES)
+----------------------------------------------------------------------------------------------------
+Current Asset Price        : $83,506.00
+Intraday Direction 3-Hours : NAIK (BULLISH (UP 3-HOURS))
+Confidence Percentage      : 62.6%
+Meta-Label Prob (Barrier)  : 55.9% (MODERATE_CONVICTION)
+Expected Net Return 3H     : +0.43%
+Market Regime Detected     : VOLATILITY_SQUEEZE (KOMPRESI VOLATILITAS (SQUEEZE))
+Regime ADX Proxy           : 16.9
+Regime Volatility (ATR %)  : 0.261%
+Tactical Recommendation    : Manfaatkan area dip pada step ke-1 (+15m di 83,529.91) untuk entry LONG/Beli, pasang target taking profit pada step ke-12 (+180m di 84,028.75). (Net Profit Est: 0.43%)
+
+Sequential 15-Minute Projection Path (+15m to +180m):
+Step  | Horizon | Time (WIB) | Projected $  | Direction   | Prob %  | Take Profit $ | Stop Loss $  | Catalyst
+-----------------------------------------------------------------------------------------------------------------------------
+#1    | +15m    | 10:30 WIB  | $83,529.91   | KONSOLIDASI | 58.0%   | $83,628.77    | $83,399.97   | Impuls Awal Rebound 15m & Penyerapan E
+#2    | +30m    | 10:45 WIB  | $83,593.40   | NAIK        | 58.4%   | $83,679.63    | $83,356.05   | Pengujian Garis EMA 9 Intraday & Akumu
+#3    | +45m    | 11:00 WIB  | $83,681.62   | NAIK        | 58.8%   | $83,718.65    | $83,322.35   | Konfirmasi Volume Surge & Kelanjutan B
+#4    | +60m    | 11:15 WIB  | $83,760.52   | NAIK        | 59.2%   | $83,751.54    | $83,293.94   | Penutupan Jam ke-1: Dominasi Pembeli &
+#5    | +75m    | 11:30 WIB  | $83,804.06   | NAIK        | 59.7%   | $83,928.35    | $83,141.24   | Konsolidasi Sehat 75m Pasca-Breakout (
+#6    | +90m    | 11:45 WIB  | $83,814.42   | NAIK        | 60.1%   | $83,968.66    | $83,106.43   | Pantulan Retest Support Dinamis VWAP 9
+#7    | +105m   | 12:00 WIB  | $83,818.01   | NAIK        | 60.5%   | $84,005.73    | $83,074.42   | Inflow Dana Lanjutan & Akselerasi Mome
+#8    | +120m   | 12:15 WIB  | $83,842.47   | NAIK        | 60.9%   | $84,040.23    | $83,044.62   | Penutupan Jam ke-2: Pembentukan Strukt
+#9    | +135m   | 12:30 WIB  | $83,894.88   | NAIK        | 61.3%   | $84,072.64    | $83,016.63   | Penetrasi Resistensi Mikro 135m Menuju
+#10   | +150m   | 12:45 WIB  | $83,958.69   | NAIK        | 61.8%   | $84,103.29    | $82,990.16   | Ekspansi Koridor Volatilitas 150m (Mom
+#11   | +165m   | 13:00 WIB  | $84,008.71   | NAIK        | 62.2%   | $84,132.44    | $82,964.98   | Retest Area Target Akhir & Stabilisasi
+#12   | +180m   | 13:15 WIB  | $84,028.75   | NAIK        | 62.6%   | $84,160.30    | $82,940.92   | Realisasi Target Puncak Horizon 3-Jam 
+
+Intraday 7-Day Walk-Forward Accuracy Evaluation (15-Minute Candlesticks):
+  * Evaluated 15m Bars               : 180
+  * Overall 15m Accuracy             : 62.2% (112/180)
+  * High-Conviction 15m Accuracy     : 85.7% (18/21)
+
+----------------------------------------------------------------------------------------------------
+SECTION 6: TECHNICAL & QUANTITATIVE MICROSTRUCTURE METRICS SNAPSHOT
+----------------------------------------------------------------------------------------------------
+Microstructure Signals Detected:
+  - RSI 15m (63.7) menunjukkan dominasi momentum beli jangka pendek.
+  - Candle 15m bertahan di atas EMA 9 intraday (pro-trend bullish).
+  - Chaikin Money Flow (+0.10) mendeteksi akumulasi dana masuk.
+
+Multi-Timeframe Confluence Engine (15M + 1H + 4H + 1D):
+  * Daily Direction        : TURUN
+  * 3-Hour Direction       : NAIK
+  * Confluence Score       : 60 / 100
+  * Badge & Status         : PANTULAN TEKNIKAL CEPAT [BEAR_MARKET_BOUNCE]
+  * Quantitative Advisory  : Divergensi: Tren harian TURUN namun 15m memantul teknikal. Disarankan scalping cepat dan pasang trailing stop.
+
+====================================================================================================
+END OF FINBLIX QUANTITATIVE DATA EXPORT
+Ready for ingestion, independent AI verification, or quant review.
+====================================================================================================

@@ -1228,7 +1228,7 @@ Finblix AI Intraday Radar Engine`;
               </table>
             </div>
           <div className="mt-8">
-            <WebhookConfigView symbol={symbol} />
+            <WebhookConfigView symbol={selectedSymbol} />
           </div>
 
 

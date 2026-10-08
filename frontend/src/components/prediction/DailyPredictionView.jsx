@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FinblixLogo, 
   CryptoOrbitIcon, 
@@ -161,6 +162,7 @@ export default function DailyPredictionView({
     asset_type: 'crypto',
     base_currency: 'USD',
   };
+  const isIdr = currentAsset?.base_currency === 'IDR' || symbol?.endsWith('.JK');
 
   // Filtered audit log
   const filteredDailyLog = useMemo(() => {
