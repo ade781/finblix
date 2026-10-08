@@ -19,7 +19,7 @@ class ComparisonService:
             elif asset:
                 bars = StockService.fetch_stock_bars(asset.symbol, timeframe=timeframe, limit=limit)
             else:
-                bars = CryptoService._generate_fallback_bars(clean_sym, count=limit)
+                bars = await CryptoService.fetch_binance_bars(clean_sym, timeframe=timeframe, limit=limit)
 
             if bars:
                 base_price = bars[0]["close"]

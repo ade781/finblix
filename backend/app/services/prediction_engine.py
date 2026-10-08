@@ -12,6 +12,7 @@ from app.models.ohlcv import OHLCVBar
 from app.services.crypto_service import CryptoService
 from app.services.scraper_service import ScraperService
 from app.services.ml_training_engine import MLTrainingEngine
+from app.services.market_snapshot import MarketSnapshotService
 
 class DailyPredictionEngine:
     @staticmethod
@@ -200,35 +201,22 @@ class DailyPredictionEngine:
             db.commit()
             db.refresh(asset)
 
-        # 2. Ambil data historis harian
-        cached_db_bars = db.query(OHLCVBar).filter(
-            OHLCVBar.asset_id == asset.id,
-            OHLCVBar.timeframe == "1d"
-        ).order_by(OHLCVBar.open_time.asc()).all()
-
-        now_epoch = int(time.time())
-        is_fresh = False
-        if cached_db_bars and len(cached_db_bars) >= 30:
-            latest_time = cached_db_bars[-1].open_time
-            max_age_hours = 24
-            if (now_epoch - latest_time) < (max_age_hours * 3600):
-                is_fresh = True
-
-        if is_fresh:
-            bars = [
-                {
-                    "time": b.open_time,
-                    "open": float(b.open_price),
-                    "high": float(b.high_price),
-                    "low": float(b.low_price),
-                    "close": float(b.close_price),
-                    "volume": float(b.volume or 0)
-                }
-                for b in cached_db_bars
-            ]
-        else:
-            bars = await CryptoService.fetch_binance_bars(asset.symbol, timeframe="1d", limit=120)
-            bars = CryptoService.get_or_cache_bars(db, asset, timeframe="1d", limit=120, live_bars=bars)
+        # 2. Ambil canonical market snapshot (terverifikasi tanpa data sintetis)
+        try:
+            snapshot = MarketSnapshotService.get_canonical_snapshot(
+                symbol=asset.symbol,
+                timeframe="1d",
+                limit=120,
+                db=db
+            )
+            bars = snapshot.get("bars", [])
+            price = snapshot.get("latest_price", 0.0)
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"Data pasar tidak tersedia untuk {symbol}: {str(e)}",
+                "symbol": symbol
+            }
 
         if len(bars) < 30:
             return {
@@ -236,8 +224,6 @@ class DailyPredictionEngine:
                 "message": "Data bar candlestick belum mencukupi untuk prediksi harian (minimal 30 hari)",
                 "symbol": symbol
             }
-
-        price = bars[-1]["close"]
 
         # 3. Data Fundamental & Scraping Aktual
         news_items = await ScraperService.get_or_seed_news(db, limit=10)
@@ -321,6 +307,20 @@ class DailyPredictionEngine:
             "engine_type": engine_type,
             "current_price": price,
             "target_date": (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d"),
+            "market_snapshot": {
+                "symbol": snapshot.get("symbol", symbol),
+                "timeframe": snapshot.get("timeframe", "1d"),
+                "data_source": snapshot.get("data_source", "binance_spot"),
+                "latest_candle_timestamp": snapshot.get("latest_candle_timestamp"),
+                "latest_candle_dt": snapshot.get("latest_candle_dt"),
+                "latest_price": snapshot.get("latest_price", price),
+                "fetched_at": snapshot.get("fetched_at"),
+                "fetched_at_dt": snapshot.get("fetched_at_dt"),
+                "data_freshness_seconds": snapshot.get("data_freshness_seconds"),
+                "is_stale": snapshot.get("is_stale", False),
+                "status": snapshot.get("status", "OK"),
+                "model_version": snapshot.get("model_version", "2.0.0_canonical"),
+            },
             "prediction": {
                 "engine_type": engine_type,
                 "direction": prediction_direction,

@@ -12,6 +12,7 @@ from app.models.asset import Asset
 from app.services.scraper_service import ScraperService
 from app.services.quant_ml import fit_direction_model, conviction_tier
 from app.services.market_data import is_crypto, binance_klines, yf_history
+from app.services.market_snapshot import MarketSnapshotService
 
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage")
 os.makedirs(MODELS_DIR, exist_ok=True)
@@ -503,16 +504,15 @@ class ThreeHourPredictionEngine:
             db.refresh(asset)
 
         slug = cls._slugify(symbol)
-        if is_crypto(symbol):
-            df = binance_klines(symbol, "15m", 300)
-        else:
-            df = yf_history(symbol, "10d", "15m")
-            df = df.tail(300).reset_index(drop=True)
-            
-        if len(df) < 50:
-            return {"status": "error", "message": f"Data lilin 15-menit belum mencukupi untuk {symbol}"}
-
-        current_price = float(df["close"].iloc[-1])
+        try:
+            snapshot = MarketSnapshotService.get_canonical_snapshot(symbol, timeframe="15m", limit=300, db=db)
+            bars = snapshot.get("bars", [])
+            if len(bars) < 50:
+                return {"status": "error", "message": f"Data lilin 15-menit belum mencukupi untuk {symbol}"}
+            df = pd.DataFrame(bars)
+            current_price = float(snapshot["latest_price"])
+        except Exception as e:
+            return {"status": "error", "message": f"Data pasar tidak tersedia untuk {symbol}: {str(e)}"}
         now_ts = int(time.time())
         now_utc = datetime.now(timezone.utc)
         session_info = cls.determine_market_session(asset)
@@ -763,6 +763,20 @@ class ThreeHourPredictionEngine:
 
         return {
             "status": "success", "symbol": symbol, "target_horizon": "3 JAM KE DEPAN (INTERVAL 15 MENIT)", "granularity": "15m",
+            "market_snapshot": {
+                "symbol": snapshot.get("symbol", symbol),
+                "timeframe": snapshot.get("timeframe", "15m"),
+                "data_source": snapshot.get("data_source", "binance_spot"),
+                "latest_candle_timestamp": snapshot.get("latest_candle_timestamp"),
+                "latest_candle_dt": snapshot.get("latest_candle_dt"),
+                "latest_price": snapshot.get("latest_price", current_price),
+                "fetched_at": snapshot.get("fetched_at"),
+                "fetched_at_dt": snapshot.get("fetched_at_dt"),
+                "data_freshness_seconds": snapshot.get("data_freshness_seconds"),
+                "is_stale": snapshot.get("is_stale", False),
+                "status": snapshot.get("status", "OK"),
+                "model_version": snapshot.get("model_version", "2.0.0_canonical"),
+            },
             "total_intervals": 12, "generated_at": now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "target_time_utc": session_info["target_time_utc"], "target_time_wib": session_info["target_time_wib"], "target_time": session_info["target_time_wib"],
             "market_session": session_info, "market_regime": regime_info, "current_price": current_price,

@@ -16,7 +16,13 @@ import pandas as pd
 CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "models_storage", "data_cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-BINANCE_SPOT = "https://api.binance.com"
+BINANCE_SPOT_ENDPOINTS = [
+    "https://data-api.binance.vision",
+    "https://api.binance.com",
+    "https://api1.binance.com",
+    "https://api3.binance.com",
+]
+BINANCE_SPOT = BINANCE_SPOT_ENDPOINTS[0]
 BINANCE_FUTURES = "https://fapi.binance.com"
 INTERVAL_MS = {"15m": 900_000, "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000}
 
@@ -66,23 +72,36 @@ def _binance_symbol(symbol: str) -> str:
 def _fetch_klines_range(symbol: str, interval: str, start_ms: int) -> pd.DataFrame:
     rows = []
     step = INTERVAL_MS[interval]
-    cursor = start_ms
-    with httpx.Client(timeout=15.0) as client:
-        while True:
-            r = client.get(f"{BINANCE_SPOT}/api/v3/klines", params={
-                "symbol": _binance_symbol(symbol), "interval": interval,
-                "startTime": cursor, "limit": 1000,
-            })
-            r.raise_for_status()
-            batch = r.json()
-            if not batch:
+    last_err = None
+
+    for endpoint in BINANCE_SPOT_ENDPOINTS:
+        rows = []
+        cursor = start_ms
+        try:
+            with httpx.Client(timeout=10.0) as client:
+                while True:
+                    r = client.get(f"{endpoint}/api/v3/klines", params={
+                        "symbol": _binance_symbol(symbol), "interval": interval,
+                        "startTime": cursor, "limit": 1000,
+                    })
+                    r.raise_for_status()
+                    batch = r.json()
+                    if not batch:
+                        break
+                    rows.extend(batch)
+                    last_open = batch[-1][0]
+                    if len(batch) < 1000:
+                        break
+                    cursor = last_open + step
+            if rows:
                 break
-            rows.extend(batch)
-            last_open = batch[-1][0]
-            if len(batch) < 1000:
-                break
-            cursor = last_open + step
+        except Exception as e:
+            last_err = e
+            continue
+
     if not rows:
+        if last_err is not None:
+            raise DataUnavailable(f"binance klines failed for {symbol}: {last_err}")
         return pd.DataFrame(columns=KLINE_COLS + ["close_time"])
     df = pd.DataFrame(rows).iloc[:, :11]
     df.columns = ["time", "open", "high", "low", "close", "volume", "close_time",

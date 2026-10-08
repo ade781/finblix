@@ -28,7 +28,10 @@ async def run_backtest(
     elif asset:
         bars = StockService.fetch_stock_bars(asset.symbol, timeframe="1d", limit=300)
     else:
-        bars = CryptoService._generate_fallback_bars(symbol, count=200)
+        bars = await CryptoService.fetch_binance_bars(symbol, timeframe="1d", limit=300)
+
+    if not bars:
+        raise HTTPException(status_code=404, detail=f"Data pasar historis tidak tersedia untuk {symbol}")
 
     result = BacktestEngine.run_backtest(
         bars=bars,
