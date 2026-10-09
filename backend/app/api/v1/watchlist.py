@@ -5,6 +5,7 @@ from app.models.asset import Asset, UserWatchlist
 
 router = APIRouter()
 
+@router.get("")
 @router.get("/")
 def get_user_watchlist(db: Session = Depends(get_db)):
     items = db.query(UserWatchlist).filter(UserWatchlist.user_name == "default_trader").all()

@@ -17,6 +17,7 @@ class WebhookTestRequest(BaseModel):
     chat_id: Optional[str] = None
     message: Optional[str] = "Peringatan Anomali Finblix Terdeteksi! BTC/USDT mengalami lonjakan volume."
 
+@router.get("")
 @router.get("/")
 def get_alerts(unread_only: bool = False, db: Session = Depends(get_db)):
     query = db.query(AlertLog)
